@@ -6,11 +6,10 @@
     "start": "node server_secure.js"
   },
   "dependencies": {
-    "better-sqlite3": "^8.0.0",
-    "express": "^4.18.2",
-    "jsonwebtoken": "^9.0.0",
-    "qrcode": "^1.5.0",
-    "dotenv": "^16.0.0",
-    "express-rate-limit": "^6.7.0"
-  }
+  "express": "^4.18.2",
+  "jsonwebtoken": "^9.0.0",
+  "qrcode": "^1.5.0",
+  "dotenv": "^16.0.0",
+  "express-rate-limit": "^6.7.0",
+  "sqlite3": "^5.1.6"
 }
