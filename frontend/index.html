@@ -155,7 +155,7 @@ async function requestOtp(){
 async function verifyOtp(){
   const email=document.getElementById("email").value;
   const code=document.getElementById("otp").value;
-  let r=await fetch(BASE+"/api/login-otp",{
+  let r=await fetch(BASE+"/api/verify-otp",{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
     body:JSON.stringify({email,code})
