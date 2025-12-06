@@ -1,0 +1,7 @@
+services:
+  - type: static_site
+    name: cmc-iria-frontend
+    repo: https://github.com/SnehDeva/cmc-iria-secure
+    buildCommand: ""
+    publishDir: "frontend"
+    rootDir: "frontend"
