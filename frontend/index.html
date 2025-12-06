@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>IRIA 2025 – Stall Visit</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+  margin:0; padding:0;
+  background:linear-gradient(135deg,#0a2342,#06213c,#03101f);
+  font-family:Arial,sans-serif;
+  color:white;
+}
+.container{
+  max-width:500px;
+  margin:40px auto;
+  padding:20px;
+  background:#ffffff10;
+  border-radius:12px;
+  backdrop-filter:blur(8px);
+  animation:fadeIn .7s ease;
+}
+@keyframes fadeIn{from{opacity:0;} to{opacity:1;}}
+
+h1{
+  text-align:center;
+  font-size:20px;
+  line-height:1.4em;
+  margin-bottom:20px;
+}
+
+.logo-row{
+  display:flex;
+  gap:20px;
+  justify-content:center;
+  align-items:center;
+  margin-bottom:20px;
+}
+.logo-row img{
+  width:90px;
+ filter:drop-shadow(0 0 2px #000);
+}
+
+label{display:block;margin-top:10px;}
+input{
+  width:100%;
+  padding:10px;
+  border-radius:6px;
+  border:none;
+  margin-top:6px;
+}
+button{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:6px;
+  margin-top:12px;
+  background:#ff8800;
+  color:#000;
+  font-weight:bold;
+  cursor:pointer;
+}
+button:hover{opacity:.9;}
+
+hr{border:none;border-top:1px solid #ffffff30;margin:25px 0;}
+
+.hidden{display:none;}
+.small{font-size:13px;color:#ccc;}
+.visit-box{
+  margin-top:25px;
+  background:#00000030;
+  padding:15px;
+  border-radius:8px;
+}
+.visit-box span{display:inline-block;padding:4px 8px;background:#ff880020;margin:4px;border-radius:4px;}
+
+.link{
+  display:block;
+  margin-top:20px;
+  text-align:center;
+  font-size:14px;
+  color:#ff8800;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<div class="logo-row">
+  <img src="assets/cmc.png">
+  <img src="assets/iria2025.png">
+</div>
+
+<h1>Welcome to CMC Vellore for the<br>
+78th Annual Conference – TN &amp; PY IRIA 2025</h1>
+
+<div id="section-login-email">
+  <label>Email</label>
+  <input id="email">
+  <button onclick="requestOtp()">Get OTP</button>
+</div>
+
+<div id="section-login-code" class="hidden">
+  <label>Enter OTP</label>
+  <input id="otp" maxlength="6">
+  <button onclick="verifyOtp()">Login</button>
+</div>
+
+<div id="section-after" class="hidden">
+  <p id="welcome"></p>
+  <button onclick="scanStall()">Scan Stall QR</button>
+  <div class="visit-box">
+    <b>Visited Stalls:</b>
+    <div id="visit-list"></div>
+  </div>
+</div>
+
+<hr>
+
+<a class="link" href="leaderboard_tv.html" target="_blank">Leaderboard (TV Mode)</a>
+
+<p class="small" style="text-align:center;margin-top:30px;">
+Powered by IRIA 2025 — Good luck!
+</p>
+
+</div>
+
+<script>
+// BACKEND URL
+const BASE = "https://cmc-iria-secure.onrender.com";
+
+// auth token
+let token=null;
+let delegateId=null;
+let delegateApproved=false;
+
+async function requestOtp(){
+  const email=document.getElementById("email").value;
+  if(!email) return alert("Enter email");
+  let r=await fetch(BASE+"/api/request-otp",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({email})
+  });
+  let j=await r.json();
+  if(j.ok){
+    document.getElementById("section-login-email").classList.add("hidden");
+    document.getElementById("section-login-code").classList.remove("hidden");
+    alert("OTP sent!");
+  }else alert(j.error||"error");
+}
+
+async function verifyOtp(){
+  const email=document.getElementById("email").value;
+  const code=document.getElementById("otp").value;
+  let r=await fetch(BASE+"/api/login-otp",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({email,code})
+  });
+  let j=await r.json();
+  if(j.token){
+    token=j.token;
+    delegateId=j.delegateId;
+    delegateApproved=j.isApproved;
+    document.getElementById("section-login-email").classList.add("hidden");
+    document.getElementById("section-login-code").classList.add("hidden");
+    document.getElementById("section-after").classList.remove("hidden");
+    document.getElementById("welcome").innerText=
+      "Welcome " + (j.name||"Delegate") +
+      " | ID: " + delegateId +
+      (delegateApproved?"":" (Pending Approval)");
+    refreshVisits();
+  }else alert(j.error||"login failed");
+}
+
+// temp scan via prompt
+function scanStall(){
+  const stall=prompt("Enter stall number (temporary scan)");
+  if(!stall) return;
+  const exp=Date.now()+60000;
+  const msg=delegateId+"|"+stall+"|"+exp;
+  const sig=sha256_hmac(msg);
+  verifyScan(stall,exp,sig);
+}
+
+async function verifyScan(stall,exp,tokenSig){
+  let r=await fetch(BASE+"/api/verify",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      Authorization:"Bearer "+token
+    },
+    body:JSON.stringify({stall,exp,token:tokenSig})
+  });
+  let j=await r.json();
+  if(j.ok){
+    refreshVisits();
+    alert("Stall recorded!");
+  }else alert(j.error||"fail");
+}
+
+async function refreshVisits(){
+  let r=await fetch(BASE+"/api/visits/"+delegateId,{
+    headers:{Authorization:"Bearer "+token}
+  });
+  let j=await r.json();
+  let box=document.getElementById("visit-list");
+  box.innerHTML="";
+  (j.visits||[]).forEach(v=>{
+    let s=document.createElement("span");
+    s.innerText=v;
+    box.appendChild(s);
+  });
+}
+
+// placeholder (we will replace with real crypto later)
+function sha256_hmac(text){
+  return "signature_disabled_for_demo_"+text;
+}
+</script>
+
+</body>
+</html>
