@@ -179,7 +179,24 @@ app.post("/api/request-otp", otpRequestLimiter, async (req,res)=>{
     [eHash,codeHash,expiresAt]
   );
 
-  console.log("OTP",email,code); // TODO email
+  // ===== EMAIL OTP USING GMAIL =====
+const nodemailer = require("nodemailer");
+
+const transport = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+await transport.sendMail({
+  from: `"IRIA 2025" <${process.env.EMAIL_USER}>`,
+  to: email,
+  subject: "IRIA 2025 OTP",
+  text: `Your login code is: ${code}\nValid for 5 minutes.`,
+});
+
   await logAction(req,"OTP_REQUEST",{email});
   res.json({ok:true});
 });
