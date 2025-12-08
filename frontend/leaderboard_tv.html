@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Leaderboard</title>
+<style>
+body{
+  background:#001d4a;
+  font-family:Arial;
+  color:white;
+  text-align:center;
+  padding:20px;
+}
+h1{margin-bottom:20px}
+.row{margin:8px 0;font-size:22px}
+.name{color:#bcd7ff}
+</style>
+</head>
+<body>
+
+<h1>Top Delegates</h1>
+<div id="list"></div>
+
+<script>
+const BASE="https://cmc-iria-secure.onrender.com";
+
+async function load(){
+  let r=await fetch(BASE+"/api/leaderboard");
+  let j=await r.json();
+  let x="";
+  j.top.forEach(t=>{
+    x+=`<div class="row"><span class="name">${t.name||t.delegateId}</span> — ${t.count}</div>`;
+  });
+  document.getElementById("list").innerHTML=x;
+}
+load();
+setInterval(load,10000);
+</script>
+
+</body>
+</html>
