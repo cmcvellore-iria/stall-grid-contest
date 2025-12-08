@@ -1,4 +1,4 @@
-// ===== CMC IRIA 2025 – SIMPLE AUTH BACKEND (NO EMAIL, PASSWORD ONLY) =====
+// ===== CMC IRIA 2025 – PASSWORD + QR BACKEND (NO EMAIL) =====
 
 const express = require("express");
 const crypto = require("crypto");
@@ -11,13 +11,14 @@ const app = express();
 app.use(express.json());
 app.set("trust proxy", true);
 
-// --- basic config ---
+// --- config ---
 const PORT = process.env.PORT || 10000;
-const JWT_SECRET = process.env.JWT_SECRET || "dev_jwt_secret_change_me";
-const ENC_SECRET = process.env.ENC_SECRET || "dev_enc_secret_change_me";
-const ADMIN_PASS = process.env.ADMIN_PASS || "cmcvsgc";
+const JWT_SECRET   = process.env.JWT_SECRET   || "dev_jwt_secret_change_me";
+const ENC_SECRET   = process.env.ENC_SECRET   || "dev_enc_secret_change_me";
+const TOKEN_SECRET = process.env.TOKEN_SECRET || "dev_token_secret_change_me";
+const ADMIN_PASS   = process.env.ADMIN_PASS   || "cmcvsgc";
 
-// ==== CORS – open to all to avoid Netlify pain ====
+// ===== CORS – keep simple and permissive for Netlify/Render =====
 app.use((req,res,next)=>{
   res.setHeader("Access-Control-Allow-Origin","*");
   res.setHeader("Access-Control-Allow-Credentials","true");
@@ -27,7 +28,7 @@ app.use((req,res,next)=>{
   next();
 });
 
-// ==== DB (NEW FILE so we don't fight old schema) ====
+// ===== DB (NEW AUTH DB) =====
 const db = new sqlite3.Database(path.join(__dirname, "secure_auth.db"));
 
 function run(sql, params = []) {
@@ -55,7 +56,7 @@ function all(sql, params = []) {
   });
 }
 
-// Create tables
+// create tables
 (async () => {
   await run(`
     CREATE TABLE IF NOT EXISTS delegates(
@@ -79,7 +80,7 @@ function all(sql, params = []) {
   `);
 })();
 
-// ==== helper functions ====
+// ===== helpers =====
 function emailHash(email) {
   return crypto
     .createHash("sha256")
@@ -88,7 +89,7 @@ function emailHash(email) {
 }
 
 function encrypt(text) {
-  const iv = crypto.randomBytes(16);
+  const iv  = crypto.randomBytes(16);
   const key = crypto.createHash("sha256").update(ENC_SECRET).digest();
   const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
   let enc = cipher.update(String(text), "utf8", "base64");
@@ -96,7 +97,7 @@ function encrypt(text) {
   return iv.toString("base64") + ":" + enc;
 }
 
-// password hashing with pbkdf2
+// password hash with PBKDF2
 function hashPassword(password) {
   const salt = crypto.randomBytes(16).toString("hex");
   const hash = crypto
@@ -134,14 +135,12 @@ function adminAuth(req, res, next) {
   next();
 }
 
-// ==== ROUTES ====
-
-// Health check
+// ===== health =====
 app.get("/", (req, res) => {
-  res.json({ status: "ok", service: "cmc-iria-simple-auth" });
+  res.json({ status: "ok", service: "cmc-iria-password-qr" });
 });
 
-// REGISTER – email OR delegateId, plus password
+// ===== REGISTER – email OR delegateId + password =====
 app.post("/api/register", async (req, res) => {
   try {
     let { name, email, delegateId, password } = req.body || {};
@@ -155,7 +154,6 @@ app.post("/api/register", async (req, res) => {
 
     const eHash = email ? emailHash(email) : null;
 
-    // check if existing
     if (email) {
       const existingByEmail = await get(
         `SELECT id FROM delegates WHERE emailHash=?`,
@@ -165,6 +163,7 @@ app.post("/api/register", async (req, res) => {
         return res.status(400).json({ error: "email already registered" });
       }
     }
+
     if (delegateId) {
       const existingById = await get(
         `SELECT id FROM delegates WHERE delegateId=?`,
@@ -175,7 +174,6 @@ app.post("/api/register", async (req, res) => {
       }
     }
 
-    // auto-generate delegateId if missing
     if (!delegateId) {
       delegateId = "D" + Math.floor(100000 + Math.random() * 900000);
     }
@@ -204,7 +202,7 @@ app.post("/api/register", async (req, res) => {
   }
 });
 
-// LOGIN – identifier (email OR delegateId) + password
+// ===== LOGIN – email OR delegateId + password =====
 app.post("/api/login", async (req, res) => {
   try {
     const { identifier, password } = req.body || {};
@@ -216,14 +214,12 @@ app.post("/api/login", async (req, res) => {
     let user;
 
     if (idStr.includes("@")) {
-      // treat as email
       const eHash = emailHash(idStr);
       user = await get(
         `SELECT * FROM delegates WHERE emailHash=?`,
         [eHash]
       );
     } else {
-      // treat as delegateId
       user = await get(
         `SELECT * FROM delegates WHERE delegateId=?`,
         [idStr]
@@ -252,7 +248,7 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// RECORD VISIT – simple stall recording
+// ===== SIMPLE VISIT – manual (used by current frontend) =====
 app.post("/api/visit", authMiddleware, async (req, res) => {
   try {
     const { stall } = req.body || {};
@@ -262,7 +258,6 @@ app.post("/api/visit", authMiddleware, async (req, res) => {
       return res.status(400).json({ error: "invalid stall" });
     }
 
-    // only one visit per stall per delegate
     const existing = await get(
       `SELECT id FROM visits WHERE delegateId=? AND stall=?`,
       [delegateId, stallNum]
@@ -281,7 +276,52 @@ app.post("/api/visit", authMiddleware, async (req, res) => {
   }
 });
 
-// GET VISITS – for grid
+// ===== SECURE QR VERIFY – uses TOKEN_SECRET & HMAC =====
+// Expected body: { stall, token, exp }
+// frontend/QR generator must compute the same HMAC:
+/// token = HMAC_SHA256(TOKEN_SECRET, `${delegateId}|${stall}|${exp}`)
+app.post("/api/verify", authMiddleware, async (req, res) => {
+  try {
+    const { stall, token, exp } = req.body || {};
+    const delegateId = req.user.delegateId;
+    const stallNum = Number(stall);
+    const now = Date.now();
+
+    if (!stallNum || !token || !exp) {
+      return res.status(400).json({ error: "missing fields" });
+    }
+    if (Number(exp) < now) {
+      return res.status(400).json({ error: "expired" });
+    }
+
+    const expected = crypto
+      .createHmac("sha256", TOKEN_SECRET)
+      .update(`${delegateId}|${stallNum}|${exp}`)
+      .digest("hex");
+
+    if (!crypto.timingSafeEqual(Buffer.from(expected, "hex"), Buffer.from(token, "hex"))) {
+      return res.status(400).json({ error: "invalid token" });
+    }
+
+    const existing = await get(
+      `SELECT id FROM visits WHERE delegateId=? AND stall=?`,
+      [delegateId, stallNum]
+    );
+    if (!existing) {
+      await run(
+        `INSERT INTO visits(delegateId,stall,ts) VALUES(?,?,?)`,
+        [delegateId, stallNum, now]
+      );
+    }
+
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("verify error:", e);
+    res.status(500).json({ error: "server error" });
+  }
+});
+
+// ===== GET VISITS =====
 app.get("/api/visits", authMiddleware, async (req, res) => {
   try {
     const delegateId = req.user.delegateId;
@@ -296,7 +336,7 @@ app.get("/api/visits", authMiddleware, async (req, res) => {
   }
 });
 
-// LEADERBOARD – top by number of stalls
+// ===== LEADERBOARD =====
 app.get("/api/leaderboard", async (req, res) => {
   try {
     const rows = await all(`
@@ -313,7 +353,7 @@ app.get("/api/leaderboard", async (req, res) => {
   }
 });
 
-// ADMIN: simple cleanup (optional)
+// ===== ADMIN CLEANUP (optional) =====
 app.post("/api/admin/cleanup", adminAuth, async (req, res) => {
   try {
     await run(`DELETE FROM visits`);
@@ -326,5 +366,5 @@ app.post("/api/admin/cleanup", adminAuth, async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log("Simple auth backend listening on", PORT);
+  console.log("Password+QR backend listening on", PORT);
 });
