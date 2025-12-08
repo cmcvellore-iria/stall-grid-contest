@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CMC Stall Grid Contest – IRIA 2025</title>
+<style>
+body{
+  margin:0;
+  font-family:Arial, Helvetica, sans-serif;
+  background:#eef4ff;
+  color:#001d4a;
+}
+
+.container{
+  max-width:420px;
+  margin:50px auto;
+  padding:25px;
+  background:white;
+  border-radius:14px;
+  box-shadow:0 4px 20px rgba(0,0,60,0.15);
+  text-align:center;
+}
+
+.logo-row{
+  display:flex;
+  justify-content:center;
+  gap:30px;
+}
+
+.logo-row img{
+  height:70px;
+}
+
+h1{
+  font-size:20px;
+  line-height:1.4;
+  margin-top:20px;
+}
+
+.quote{
+  font-style:italic;
+  color:#274472;
+  margin-top:25px;
+  font-size:14px;
+}
+
+input{
+  width:100%;
+  padding:12px;
+  margin:10px 0;
+  border:1px solid #b4c7e7;
+  border-radius:8px;
+}
+
+button{
+  width:100%;
+  padding:14px;
+  background:#224c8d;
+  color:white;
+  border:none;
+  border-radius:8px;
+  font-size:15px;
+  cursor:pointer;
+  margin-top:8px;
+}
+
+button:hover{
+  background:#193c6b;
+}
+
+.hidden{display:none}
+
+.visit-box{
+  margin-top:20px;
+  background:#f2f6ff;
+  padding:15px;
+  border-radius:8px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<div class="logo-row">
+  <img src="assets/cmc.png">
+  <img src="assets/iria2025.png">
+</div>
+
+<div class="quote">
+  “I no longer felt that I should spend my life in a life of ease. I resolved to return to India and spend my life serving the needy.”<br>
+  – Dr. Ida S. Scudder
+</div>
+
+<h1>
+Welcome to the Stall Grid Contest at CMC Vellore<br>
+78th Annual Conference TN & PY IRIA 2025
+</h1>
+
+<!-- Email section -->
+<div id="section-login-email">
+  <input id="email" placeholder="Enter Email">
+  <button onclick="requestOtp()">Get OTP</button>
+</div>
+
+<!-- OTP section -->
+<div id="section-login-code" class="hidden">
+  <input id="otp" maxlength="6" placeholder="Enter OTP">
+  <button onclick="verifyOtp()">Login</button>
+</div>
+
+<!-- After Login -->
+<div id="section-after" class="hidden">
+  <p id="welcome"></p>
+  <button onclick="scanStall()">Scan Stall QR</button>
+
+  <div class="visit-box">
+    <b>Visited Stalls:</b>
+    <div id="visit-list"></div>
+  </div>
+</div>
+
+<p style="margin-top:30px;font-size:12px;">
+Powered by IRIA 2025 – Good luck!
+</p>
+
+</div><!-- END container -->
+
+<script>
+const BASE="https://cmc-iria-secure.onrender.com";
+
+// store
+let token=null;
+let delegateId=null;
+let delegateApproved=false;
+
+// request otp
+async function requestOtp(){
+  const email=document.getElementById("email").value;
+  if(!email) return alert("Enter email");
+
+  let r=await fetch(BASE+"/api/request-otp",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({email})
+  });
+
+  let j=await r.json();
+  if(j.ok){
+    document.getElementById("section-login-email").classList.add("hidden");
+    document.getElementById("section-login-code").classList.remove("hidden");
+    alert("OTP sent (check email)");
+  }else{
+    alert(j.error||"error");
+  }
+}
+
+async function verifyOtp(){
+  const email=document.getElementById("email").value;
+  const code=document.getElementById("otp").value;
+
+  let r=await fetch(BASE+"/api/login-otp",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({email,code})
+  });
+
+  let j=await r.json();
+  if(j.token){
+    token=j.token;
+    delegateId=j.delegateId;
+    delegateApproved=j.isApproved;
+
+    document.getElementById("welcome").innerText=
+      "Hello "+(j.name||delegateId);
+
+    document.getElementById("section-login-code").classList.add("hidden");
+    document.getElementById("section-after").classList.remove("hidden");
+  }else{
+    alert(j.error||"invalid");
+  }
+}
+
+// scan stall
+async function scanStall(){
+  let input=prompt("Enter stall number 1-50");
+  let stall=Number(input||"0");
+  if(stall<1||stall>50) return alert("Invalid stall");
+
+  let exp=Date.now()+60000;
+  let h=await crypto.subtle.digest("SHA-256",
+    new TextEncoder().encode(`${delegateId}|${stall}|${exp}`)
+  );
+  let tokenArr=Array.from(new Uint8Array(h));
+  let tok=tokenArr.map(x=>x.toString(16).padStart(2,"0")).join("");
+
+  let r=await fetch(BASE+"/api/verify",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":"Bearer "+token
+    },
+    body:JSON.stringify({stall,token:tok,exp})
+  });
+
+  let j=await r.json();
+  if(j.ok){
+    document.getElementById("visit-list").innerHTML+="<div>"+stall+"</div>";
+    alert("Recorded");
+  }else{
+    alert(j.error);
+  }
+}
+</script>
+
+</body>
+</html>
