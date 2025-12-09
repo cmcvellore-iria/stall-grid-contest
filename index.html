@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CMC Stall Grid – IRIA 2025</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{
+  height:100%;
+  font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+  scroll-behavior:smooth;
+  background:#000;
+  color:#fff;
+}
+
+/* ---------- SECTIONS ---------- */
+section{
+  position:relative;
+  min-height:100vh;
+  width:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:40px 16px;
+  text-align:center;
+  opacity:0;
+  transform:translateY(40px);
+  transition:opacity .9s ease-out, transform .9s ease-out;
+}
+section.active{
+  opacity:1;
+  transform:translateY(0);
+}
+
+/* ---------- PARALLAX BACKGROUNDS ---------- */
+.parallax{
+  position:absolute;
+  inset:0;
+  background-size:cover;
+  background-position:center;
+  background-attachment:fixed;
+  z-index:-2;
+}
+
+/* HERO – chapel hero (put your file at assets/chapel-hero.jpg) */
+.bg1{
+  background:
+    linear-gradient(rgba(0,0,0,.35), rgba(0,0,0,.45)),
+    url("assets/chapel-hero.jpg");
+  background-size:cover;
+  background-position:center 30%;
+  background-attachment:fixed;
+  filter:brightness(.78) contrast(1.18) saturate(1.06);
+}
+
+/* other sections = gradients (no external images needed) */
+.bg2{
+  background:radial-gradient(circle at top, #223a70, #040716);
+}
+.bg3{
+  background:radial-gradient(circle at bottom, #061b35, #02030a);
+}
+.bg4{
+  background:radial-gradient(circle at center, #050814, #000);
+}
+.bg5{
+  background:radial-gradient(circle at top, #020512, #050818);
+}
+
+/* ---------- HERO CONTENT ---------- */
+.logo-row{
+  display:flex;
+  gap:28px;
+  justify-content:center;
+  margin-bottom:24px;
+}
+.logo-row img{
+  height:64px;
+  filter:drop-shadow(0 0 6px rgba(0,0,0,.55));
+}
+
+.glass{
+  max-width:720px;
+  margin:0 auto;
+  padding:32px 22px 26px;
+  border-radius:24px;
+  background:rgba(6,10,25,.6);
+  border:1px solid rgba(255,255,255,.16);
+  backdrop-filter:blur(20px);
+  box-shadow:
+    0 0 40px rgba(0,0,0,.6),
+    0 0 0 1px rgba(255,255,255,.05);
+}
+.glass p{line-height:1.7}
+
+.scroll-hint{
+  margin-top:20px;
+  font-size:13px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  opacity:.7;
+}
+.scroll-hint span{
+  display:block;
+  font-size:20px;
+  margin-top:6px;
+}
+
+/* ---------- BUTTONS & INPUTS ---------- */
+button{
+  padding:14px 32px;
+  border:none;
+  border-radius:999px;
+  background:#0d6efd;
+  color:#fff;
+  font-size:1rem;
+  cursor:pointer;
+  box-shadow:0 8px 24px rgba(0,0,0,.45);
+  transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
+}
+button:hover{
+  background:#0b5ad6;
+  transform:translateY(-1px);
+  box-shadow:0 12px 30px rgba(0,0,0,.55);
+}
+input{
+  width:100%;
+  padding:12px 14px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.28);
+  background:rgba(3,8,30,.9);
+  color:#fff;
+  margin:6px 0;
+  font-size:14px;
+}
+input::placeholder{color:rgba(220,230,255,.6);}
+
+/* registration card */
+.register-card{
+  max-width:420px;
+  width:100%;
+  margin:0 auto;
+  text-align:left;
+  background:rgba(4,8,25,.88);
+  border-radius:24px;
+  padding:26px 22px 28px;
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 0 30px rgba(0,0,0,.7);
+}
+
+/* small auth status text */
+#auth-status{
+  font-size:12px;
+  opacity:.8;
+  margin-top:6px;
+}
+
+/* ---------- NEON STALL GRID ---------- */
+#stall-grid{
+  margin-top:40px;
+}
+.grid-container{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(110px,1fr));
+  gap:14px;
+  margin-top:16px;
+}
+.neon-stall{
+  padding:18px 10px;
+  border-radius:16px;
+  background:radial-gradient(circle at top, #07142b, #010208);
+  border:1px solid rgba(0,255,255,.45);
+  color:#9cf9ff;
+  font-size:14px;
+  text-align:center;
+  cursor:pointer;
+  box-shadow:0 0 12px rgba(0,255,255,.5);
+  transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.neon-stall:hover{
+  transform:translateY(-3px);
+  box-shadow:0 0 18px rgba(0,255,255,.85);
+  border-color:rgba(0,255,255,.8);
+}
+
+/* visited stall */
+.neon-stall.visited{
+  opacity:.7;
+  border-color:rgba(120,255,200,.85);
+  box-shadow:0 0 18px rgba(120,255,200,.7);
+}
+
+/* ---------- LEADERBOARD ---------- */
+#leaderboard{
+  margin-top:40px;
+  text-align:left;
+}
+#leader-list{
+  list-style:none;
+  padding:0;
+  margin-top:10px;
+}
+#leader-list li{
+  padding:6px 0;
+  font-size:14px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+/* QR scanner overlay */
+#qr-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.9);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:50;
+  flex-direction:column;
+}
+#qr-reader{
+  width:320px;
+  max-width:90vw;
+}
+#qr-close{
+  margin-top:16px;
+  font-size:13px;
+  padding:8px 20px;
+  border-radius:999px;
+  background:#222;
+}
+
+/* toast */
+#toast{
+  position:fixed;
+  left:50%;
+  bottom:30px;
+  transform:translateX(-50%);
+  background:#111827;
+  padding:10px 18px;
+  border-radius:999px;
+  font-size:13px;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .3s ease, transform .3s ease;
+  z-index:60;
+}
+#toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(-6px);
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media(max-width:600px){
+  section{padding:32px 14px;}
+  .glass{padding:26px 18px;}
+  .logo-row{flex-wrap:wrap;gap:18px;}
+  .bg1{background-position:center 40%;}
+}
+</style>
+
+<!-- QR scanner library -->
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+</head>
+<body>
+
+<!-- SECTION 1: HERO -->
+<section id="s1">
+  <div class="parallax bg1"></div>
+  <div class="glass">
+    <div class="logo-row">
+      <!-- put your actual logo files in /assets/ -->
+      <img src="assets/cmc.png" alt="CMC Logo">
+      <img src="assets/iria2025.png" alt="IRIA 2025 Logo">
+    </div>
+
+    <p style="font-style:italic;font-size:17px;">
+      “Even as the Son of man came not to be ministered unto, but to minister,
+      and to give his life a ransom for many.”
+      <br><span style="font-size:13px;opacity:.8;">— Matthew 20:28</span>
+    </p>
+
+    <p style="margin-top:18px;font-size:15px;opacity:.9;">
+      Through this sacred call to service, CMC carries a heritage of compassion
+      and healing that has echoed across generations.
+    </p>
+
+    <p style="margin-top:18px;font-style:italic;font-size:16px;">
+      “I felt God had called me to bring healing to the suffering people of India.”
+      <br><span style="font-size:13px;opacity:.8;">— Dr. Ida Scudder</span>
+    </p>
+
+    <div class="scroll-hint">
+      SCROLL TO ENTER
+      <span>↓</span>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 2: WELCOME -->
+<section id="s2">
+  <div class="parallax bg2"></div>
+  <div>
+    <h2 style="font-size:24px;margin-bottom:14px;">Welcome to the Stall Grid Contest</h2>
+    <p style="max-width:560px;margin:0 auto;font-size:16px;line-height:1.7;opacity:.9;">
+      Engage with exhibitors, discover new technologies, and explore radiology
+      innovations during the 78th Annual IRIA Conference at CMC Vellore.
+      Each scan at a stall records your visit in your digital passport.
+    </p>
+  </div>
+</section>
+
+<!-- SECTION 3: HOW IT WORKS -->
+<section id="s3">
+  <div class="parallax bg3"></div>
+  <div>
+    <h3 style="font-size:22px;margin-bottom:18px;">How It Works</h3>
+    <p style="max-width:520px;margin:0 auto;font-size:15px;line-height:1.7;opacity:.95;text-align:left;">
+      • Register once using your email and delegate ID<br>
+      • Login securely on your device<br>
+      • Visit each exhibitor stall in the trade area<br>
+      • Scan the QR code displayed at that stall<br>
+      • Your visit is recorded automatically in Firestore<br>
+      • Track your progress in real-time<br>
+      • Top visitors appear on the live leaderboard
+    </p>
+  </div>
+</section>
+
+<!-- SECTION 4: CTA -->
+<section id="s4">
+  <div class="parallax bg4"></div>
+  <div>
+    <h3 style="font-size:22px;margin-bottom:18px;">Ready to Begin?</h3>
+    <p style="font-size:15px;opacity:.85;margin-bottom:20px;">
+      Create your login and start exploring the IRIA 2025 exhibition at CMC.
+    </p>
+    <button onclick="scrollToRegistration()">Get Started</button>
+  </div>
+</section>
+
+<!-- SECTION 5: REGISTRATION + GRID + LEADERBOARD -->
+<section id="s5">
+  <div class="parallax bg5"></div>
+
+  <div class="register-card" id="section-register">
+    <h3 style="margin-bottom:8px;">Register / Login</h3>
+    <p id="auth-status">Not signed in</p>
+
+    <input id="name-input" placeholder="Name">
+    <input id="email-input" placeholder="Email (for login)">
+    <input id="delegate-input" placeholder="Delegate ID (optional)">
+    <input id="password-input" type="password" placeholder="Password">
+
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <button style="flex:1;" onclick="registerUser()">Register</button>
+      <button style="flex:1;" onclick="loginUser()">Login</button>
+    </div>
+
+    <!-- Neon Stall Grid -->
+    <div id="stall-grid">
+      <h4 style="margin-top:26px;font-size:16px;">Stall Grid</h4>
+      <p style="font-size:13px;opacity:.7;margin-top:4px;">
+        Tap a stall and scan the QR code at that stall using your camera.
+      </p>
+      <div id="grid" class="grid-container"></div>
+    </div>
+
+    <!-- Leaderboard -->
+    <div id="leaderboard">
+      <h4 style="margin-top:26px;font-size:16px;">Leaderboard</h4>
+      <ul id="leader-list"></ul>
+    </div>
+  </div>
+</section>
+
+<!-- QR overlay -->
+<div id="qr-overlay">
+  <div id="qr-reader"></div>
+  <button id="qr-close" onclick="closeScanner()">Close</button>
+</div>
+
+<!-- toast -->
+<div id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  updateProfile
+} from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDocs,
+  collection,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+/* ----------------- FIREBASE CONFIG ----------------- */
+const firebaseConfig = {
+  apiKey: "AIzaSyCMQDWuUnVCbfr5Sozj9c2XMkISkc7WB00",
+  authDomain: "cmc-stallgrid-passport.firebaseapp.com",
+  projectId: "cmc-stallgrid-passport",
+  storageBucket: "cmc-stallgrid-passport.appspot.com",
+  messagingSenderId: "729984975490",
+  appId: "1:729984975490:web:757bca01efebe3149caa9b"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+/* ----------------- UI HELPERS ----------------- */
+const sections = document.querySelectorAll("section");
+const io = new IntersectionObserver(entries=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){
+      entry.target.classList.add("active");
+    }
+  });
+},{threshold:0.35});
+sections.forEach(s=>io.observe(s));
+
+window.scrollToRegistration = function(){
+  document.getElementById("s5").scrollIntoView({behavior:"smooth"});
+};
+
+function showToast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),2000);
+}
+
+/* ----------------- AUTH ----------------- */
+const nameInput     = document.getElementById("name-input");
+const emailInput    = document.getElementById("email-input");
+const passInput     = document.getElementById("password-input");
+const delegateInput = document.getElementById("delegate-input");
+const authStatus    = document.getElementById("auth-status");
+
+window.registerUser = async function(){
+  const email = emailInput.value.trim();
+  const pass  = passInput.value.trim();
+  const name  = nameInput.value.trim();
+  const delId = delegateInput.value.trim();
+
+  if(!email || !pass){
+    alert("Email and password are required.");
+    return;
+  }
+
+  try{
+    const cred = await createUserWithEmailAndPassword(auth,email,pass);
+    if(name){
+      await updateProfile(cred.user,{ displayName:name });
+    }
+    await setDoc(doc(db,"users",cred.user.uid),{
+      name: name || null,
+      email,
+      delegateId: delId || null,
+      createdAt: serverTimestamp()
+    },{ merge:true });
+
+    showToast("Registered & signed in");
+  }catch(e){
+    alert(e.message);
+  }
+};
+
+window.loginUser = async function(){
+  const email = emailInput.value.trim();
+  const pass  = passInput.value.trim();
+  if(!email || !pass){
+    alert("Enter email and password.");
+    return;
+  }
+  try{
+    await signInWithEmailAndPassword(auth,email,pass);
+    showToast("Logged in");
+  }catch(e){
+    alert(e.message);
+  }
+};
+
+onAuthStateChanged(auth, async (user)=>{
+  if(user){
+    authStatus.textContent = `Signed in as ${user.displayName || user.email}`;
+    await loadUserVisits(user.uid);
+    await loadLeaderboard();
+  }else{
+    authStatus.textContent = "Not signed in";
+    document.getElementById("leader-list").innerHTML = "";
+  }
+});
+
+/* ----------------- STALL GRID ----------------- */
+const gridEl = document.getElementById("grid");
+const stallIds = [];
+for(let i=1;i<=15;i++){
+  const id = "Stall " + i;
+  stallIds.push(id);
+  const div = document.createElement("div");
+  div.className = "neon-stall";
+  div.dataset.stallId = id;
+  div.textContent = id;
+  div.onclick = ()=>openScanner(id);
+  gridEl.appendChild(div);
+}
+
+/* ----------------- QR SCANNER ----------------- */
+let html5QrInstance = null;
+const overlayEl = document.getElementById("qr-overlay");
+
+window.openScanner = function(stallName){
+  if(!auth.currentUser){
+    alert("Please login first.");
+    return;
+  }
+  overlayEl.style.display = "flex";
+  const qrRegionId = "qr-reader";
+
+  if(html5QrInstance){
+    html5QrInstance.stop().catch(()=>{}).finally(()=>startScanner());
+  }else{
+    startScanner();
+  }
+
+  function startScanner(){
+    html5QrInstance = new Html5Qrcode(qrRegionId);
+    html5QrInstance.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: 250 },
+      decodedText => {
+        html5QrInstance.stop().catch(()=>{});
+        overlayEl.style.display = "none";
+        recordVisit(stallName, decodedText);
+      },
+      err => {
+        // ignore scan failures
+      }
+    ).catch(err=>{
+      overlayEl.style.display = "none";
+      alert("Camera error: " + err);
+    });
+  }
+};
+
+window.closeScanner = function(){
+  overlayEl.style.display = "none";
+  if(html5QrInstance){
+    html5QrInstance.stop().catch(()=>{});
+  }
+};
+
+/* ----------------- VISIT RECORDING ----------------- */
+async function recordVisit(stallName, qrText){
+  const user = auth.currentUser;
+  if(!user) return;
+  const uid = user.uid;
+
+  // visits/{uid}/stalls/{stallId}
+  await setDoc(
+    doc(db,"visits",uid,"stalls",stallName),
+    {
+      stall: stallName,
+      scannedText: qrText || null,
+      visitedAt: serverTimestamp()
+    },
+    { merge:true }
+  );
+
+  markStallVisited(stallName);
+  await loadLeaderboard();
+  showToast(`Recorded visit: ${stallName}`);
+}
+
+function markStallVisited(stallName){
+  const cards = document.querySelectorAll(".neon-stall");
+  cards.forEach(card=>{
+    if(card.dataset.stallId === stallName){
+      card.classList.add("visited");
+      card.textContent = stallName + " ✓";
+    }
+  });
+}
+
+/* preload visited stalls for this user */
+async function loadUserVisits(uid){
+  const snap = await getDocs(collection(db,"visits",uid,"stalls"));
+  snap.forEach(docSnap=>{
+    const stallName = docSnap.id;
+    markStallVisited(stallName);
+  });
+}
+
+/* ----------------- LEADERBOARD ----------------- */
+async function loadLeaderboard(){
+  const allUsersSnap = await getDocs(collection(db,"visits"));
+  const arr = [];
+
+  for(const userDoc of allUsersSnap.docs){
+    const subs = await getDocs(collection(db,"visits",userDoc.id,"stalls"));
+    arr.push({
+      uid: userDoc.id,
+      count: subs.size
+    });
+  }
+
+  arr.sort((a,b)=>b.count - a.count);
+
+  const ul = document.getElementById("leader-list");
+  ul.innerHTML = arr.map((u,i)=>`
+    <li>${i+1}. ${u.uid} – ${u.count} stalls</li>
+  `).join("");
+}
+</script>
+
+</body>
+</html>
