@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CMC Stall Grid Passport – IRIA 2025</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!--
+    EXPECTED FILES IN ./assets
+    --------------------------------
+    chapel-hero.jpg     (natural chapel + pond hero image)
+    cmc.png             (CMC logo)
+    iria2025.png        (IRIA 2025 logo)
+  -->
+
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+
+    html,body{
+      height:100%;
+      font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+      scroll-behavior:smooth;
+      background:#020617;
+      color:#f9fafb;
+    }
+
+    body{overflow-x:hidden;}
+
+    /* ---------- GENERIC PANEL ---------- */
+    section.panel{
+      position:relative;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:0 1.4rem 16vh;
+      text-align:center;
+      color:#f9fafb;
+      overflow:hidden;
+      opacity:0;
+      transform:translateY(32px);
+      transition:opacity 0.9s ease-out, transform 0.9s ease-out;
+    }
+    section.panel.active{
+      opacity:1;
+      transform:translateY(0);
+    }
+
+    /* single chapel background for all panels */
+    section.panel::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:url("assets/chapel-hero.jpg") center center / cover no-repeat fixed;
+      transform:scale(1.06);
+      z-index:-2;
+    }
+    /* soft gradient overlay so text stays readable, but still bright */
+    section.panel::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(
+        to bottom,
+        rgba(0,0,0,0.08) 5%,
+        rgba(0,0,0,0.32) 90%
+      );
+      z-index:-1;
+    }
+
+    /* ---------- HERO ---------- */
+    #hero{
+      align-items:flex-end;
+      padding-bottom:18vh;
+    }
+
+    .logo-row{
+      position:absolute;
+      top:1.2rem;
+      left:50%;
+      transform:translateX(-50%);
+      display:flex;
+      gap:18px;
+      align-items:center;
+      justify-content:center;
+      z-index:2;
+    }
+    .logo-row img{
+      height:46px;
+      filter:drop-shadow(0 0 6px rgba(0,0,0,0.7));
+    }
+
+    .hero-glass{
+      padding:0.8rem 1.25rem;
+      background:rgba(255,255,255,0.22);
+      backdrop-filter:blur(8px);
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,0.35);
+      max-width:70%;
+      text-align:center;
+      color:#020617;
+      font-size:1rem;
+      line-height:1.45;
+      box-shadow:0 16px 50px rgba(0,0,0,0.6);
+      opacity:0;
+      transform:translateY(20px);
+      animation:heroFade 1.6s cubic-bezier(.25,.1,.25,1) 0.28s forwards;
+    }
+    .hero-glass p{
+      margin-bottom:0.25rem;
+    }
+    .hero-ref{
+      font-size:0.8rem;
+      opacity:0.8;
+    }
+
+    .scroll-hint{
+      margin-top:0.6rem;
+      font-size:0.75rem;
+      letter-spacing:0.24em;
+      text-transform:uppercase;
+      opacity:0.9;
+      color:#e5e7eb;
+      text-shadow:0 1px 3px rgba(0,0,0,0.7);
+    }
+    .scroll-hint span{
+      display:block;
+      font-size:1.2rem;
+      margin-top:0.1rem;
+    }
+
+    @keyframes heroFade{
+      0%{opacity:0;transform:translateY(20px);}
+      100%{opacity:1;transform:translateY(0);}
+    }
+
+    /* ---------- INFO SECTION ---------- */
+    #info .info-card{
+      max-width:760px;
+      width:100%;
+      padding:1rem 1.2rem 1rem;
+      background:rgba(15,23,42,0.78);
+      border-radius:18px;
+      border:1px solid rgba(148,163,184,0.6);
+      backdrop-filter:blur(10px);
+      box-shadow:0 18px 55px rgba(0,0,0,0.8);
+      text-align:left;
+    }
+    #info h2{
+      font-size:1.4rem;
+      margin-bottom:0.35rem;
+    }
+    #info p{
+      font-size:0.94rem;
+      line-height:1.7;
+      margin-bottom:0.4rem;
+    }
+    #info ul{
+      margin-top:0.4rem;
+      padding-left:1.1rem;
+      font-size:0.9rem;
+      line-height:1.6;
+    }
+
+    /* ---------- PASSPORT SECTION ---------- */
+    #passport{
+      align-items:flex-start;
+      padding-top:20vh;
+    }
+
+    #passport::before{
+      /* same background, slightly different vertical focal */
+      background:url("assets/chapel-hero.jpg") center 35% / cover no-repeat fixed;
+      transform:scale(1.05);
+    }
+
+    #passport .content-wrap{
+      max-width:980px;
+      width:100%;
+      margin:0 auto;
+      display:flex;
+      flex-direction:column;
+      gap:1.4rem;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:0.22rem 0.7rem;
+      border-radius:999px;
+      font-size:0.72rem;
+      letter-spacing:0.18em;
+      text-transform:uppercase;
+      background:rgba(15,23,42,0.9);
+      border:1px solid rgba(148,163,184,0.85);
+      color:#e5e7eb;
+    }
+
+    .auth-card,
+    .grid-card{
+      background:rgba(15,23,42,0.78);
+      border-radius:20px;
+      border:1px solid rgba(148,163,184,0.5);
+      padding:1.1rem 1.1rem 1rem;
+      box-shadow:0 18px 55px rgba(0,0,0,0.9);
+      text-align:left;
+    }
+
+    .auth-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:0.5rem;
+      margin-bottom:0.55rem;
+    }
+    .auth-title{
+      font-size:1.02rem;
+      font-weight:600;
+    }
+    #auth-status{
+      font-size:0.8rem;
+      opacity:0.85;
+    }
+
+    input{
+      width:100%;
+      padding:0.6rem 0.8rem;
+      border-radius:10px;
+      border:1px solid rgba(148,163,184,0.72);
+      background:rgba(15,23,42,0.9);
+      color:#f9fafb;
+      margin-top:0.35rem;
+      font-size:0.9rem;
+    }
+    input::placeholder{
+      color:rgba(209,213,219,0.78);
+    }
+
+    .auth-buttons{
+      display:flex;
+      gap:0.5rem;
+      margin-top:0.6rem;
+    }
+
+    button{
+      border:none;
+      border-radius:999px;
+      padding:0.7rem 1.5rem;
+      font-size:0.9rem;
+      cursor:pointer;
+      background:#2563eb;
+      color:white;
+      box-shadow:0 10px 30px rgba(15,23,42,0.85);
+      transition:background 0.2s ease, transform 0.18s ease, box-shadow 0.18s ease;
+      white-space:nowrap;
+    }
+    button:hover{
+      background:#1d4ed8;
+      transform:translateY(-1px);
+      box-shadow:0 14px 36px rgba(15,23,42,0.95);
+    }
+    button:disabled{
+      background:#4b5563;
+      box-shadow:none;
+      cursor:not-allowed;
+    }
+
+    .grid-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:0.5rem;
+      margin-bottom:0.4rem;
+    }
+
+    .grid-container{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(96px,1fr));
+      gap:0.55rem;
+      margin-top:0.4rem;
+    }
+    .neon-stall{
+      padding:0.7rem 0.4rem;
+      border-radius:14px;
+      background:radial-gradient(circle at top,#0f172a,#020617 80%);
+      border:1px solid rgba(34,211,238,0.55);
+      color:#a5f3fc;
+      font-size:0.8rem;
+      text-align:center;
+      cursor:pointer;
+      box-shadow:0 0 14px rgba(34,211,238,0.7);
+      transition:transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+    }
+    .neon-stall:hover{
+      transform:translateY(-2px);
+      box-shadow:0 0 18px rgba(34,211,238,0.95);
+      border-color:rgba(34,211,238,0.9);
+    }
+    .neon-stall.visited{
+      border-color:rgba(74,222,128,0.9);
+      box-shadow:0 0 18px rgba(74,222,128,0.85);
+      color:#bbf7d0;
+      background:radial-gradient(circle at top,#022c22,#020617 80%);
+    }
+
+    #leaderboard{
+      margin-top:0.7rem;
+    }
+    #leader-list{
+      list-style:none;
+      margin-top:0.4rem;
+      text-align:left;
+      font-size:0.82rem;
+      max-height:220px;
+      overflow:auto;
+      padding-right:0.3rem;
+    }
+    #leader-list li{
+      padding:0.22rem 0;
+      border-bottom:1px solid rgba(30,64,175,0.55);
+      display:flex;
+      justify-content:space-between;
+      gap:0.5rem;
+    }
+    #leader-list li span.name{
+      font-weight:500;
+      opacity:0.94;
+    }
+    #leader-list li span.count{
+      font-family:system-ui,monospace;
+      opacity:0.85;
+    }
+
+    @media(min-width:900px){
+      #passport .content-wrap{
+        flex-direction:row;
+        align-items:flex-start;
+      }
+      .auth-card,.grid-card{
+        flex:1;
+      }
+    }
+
+    @media(max-width:720px){
+      section.panel{
+        padding:0 1rem 14vh;
+      }
+      .hero-glass{
+        max-width:90%;
+        font-size:0.95rem;
+      }
+      .logo-row img{
+        height:40px;
+      }
+    }
+
+    /* ---------- QR OVERLAY ---------- */
+    #qr-overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,0.94);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      flex-direction:column;
+      z-index:50;
+      padding:1.2rem;
+    }
+    #qr-reader{
+      width:320px;
+      max-width:100%;
+      border-radius:16px;
+      overflow:hidden;
+      background:#020617;
+    }
+    #qr-close{
+      margin-top:0.75rem;
+      padding:0.45rem 1.2rem;
+      font-size:0.82rem;
+      background:#111827;
+      box-shadow:none;
+    }
+
+    /* ---------- TOAST ---------- */
+    #toast{
+      position:fixed;
+      left:50%;
+      bottom:26px;
+      transform:translateX(-50%) translateY(14px);
+      background:#020617;
+      color:#e5e7eb;
+      padding:0.55rem 1.1rem;
+      border-radius:999px;
+      font-size:0.8rem;
+      box-shadow:0 12px 30px rgba(0,0,0,0.9);
+      opacity:0;
+      pointer-events:none;
+      transition:opacity 0.28s ease, transform 0.28s ease;
+      z-index:60;
+    }
+    #toast.show{
+      opacity:1;
+      transform:translateX(-50%) translateY(0);
+    }
+  </style>
+
+  <!-- QR scanner library -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+</head>
+<body>
+
+<!-- HERO -->
+<section id="hero" class="panel">
+  <div class="logo-row">
+    <img src="assets/cmc.png" alt="CMC Logo">
+    <img src="assets/iria2025.png" alt="IRIA 2025 Logo">
+  </div>
+
+  <div>
+    <div class="hero-glass">
+      <p>
+        “Even as the Son of man came not to be ministered unto, but to minister,
+        and to give his life a ransom for many.”
+      </p>
+      <div class="hero-ref">Matthew 20:28</div>
+    </div>
+    <div class="scroll-hint">
+      SCROLL TO ENTER
+      <span>↓</span>
+    </div>
+  </div>
+</section>
+
+<!-- INFO / HOW IT WORKS -->
+<section id="info" class="panel">
+  <div class="info-card">
+    <h2>Welcome to the CMC Stall Grid Passport</h2>
+    <p>
+      During the 78<sup>th</sup> IRIA Annual Conference at CMC Vellore, explore the trade area,
+      interact with exhibitors and discover new technologies. This digital passport records
+      each stall you visit using a simple QR scan.
+    </p>
+    <p><strong>How it works:</strong></p>
+    <ul>
+      <li>Register once with your email and a password.</li>
+      <li>Login on your phone or tablet.</li>
+      <li>At each exhibitor stall, tap the stall tile on your screen.</li>
+      <li>Scan the QR code displayed at that stall.</li>
+      <li>Your visit is recorded automatically in the system.</li>
+      <li>Watch your name climb the live leaderboard as you explore.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- PASSPORT / QR / LEADERBOARD -->
+<section id="passport" class="panel">
+  <div class="content-wrap">
+    <!-- Auth -->
+    <div class="auth-card">
+      <div class="auth-top">
+        <div>
+          <div class="pill">Delegate Login</div>
+          <div class="auth-title">Access Your Stall Passport</div>
+        </div>
+        <div id="auth-status">Not signed in</div>
+      </div>
+
+      <input id="name-input" placeholder="Name">
+      <input id="email-input" placeholder="Email (for login)">
+      <input id="delegate-input" placeholder="Delegate ID (optional)">
+      <input id="password-input" type="password" placeholder="Password">
+
+      <div class="auth-buttons">
+        <button style="flex:1" onclick="registerUser()">Register</button>
+        <button style="flex:1" onclick="loginUser()">Login</button>
+      </div>
+
+      <p style="margin-top:0.6rem;font-size:0.8rem;opacity:0.88;">
+        Use the same login on all your devices. Once signed in, tap a stall and scan the QR
+        displayed at that exhibitor’s booth to record your visit.
+      </p>
+    </div>
+
+    <!-- Grid + leaderboard -->
+    <div class="grid-card">
+      <div class="grid-header">
+        <div>
+          <div class="pill">Stall Grid</div>
+          <div style="font-size:0.98rem;font-weight:600;margin-top:0.15rem;">
+            Scan QR at Each Exhibitor
+          </div>
+          <p style="font-size:0.8rem;opacity:0.88;margin-top:0.2rem;">
+            Tap a stall tile to open the camera. After scanning, the stall will glow and your visit
+            counts towards the live leaderboard.
+          </p>
+        </div>
+      </div>
+
+      <div id="grid" class="grid-container"></div>
+
+      <div id="leaderboard">
+        <div style="margin-top:0.7rem;display:flex;justify-content:space-between;align-items:center;gap:0.4rem;">
+          <div>
+            <div class="pill">Leaderboard</div>
+            <div style="font-size:0.95rem;font-weight:600;margin-top:0.15rem;">
+              Most Active Stall Explorers
+            </div>
+          </div>
+          <button style="padding:0.35rem 0.9rem;font-size:0.78rem;" onclick="manualRefreshLeaderboard()">
+            Refresh
+          </button>
+        </div>
+        <ul id="leader-list"></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- QR overlay -->
+<div id="qr-overlay">
+  <div id="qr-reader"></div>
+  <button id="qr-close" onclick="closeScanner()">Close</button>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- Firebase + app logic -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+  import {
+    getAuth,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    onAuthStateChanged,
+    updateProfile
+  } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+  import {
+    getFirestore,
+    doc,
+    setDoc,
+    getDoc,
+    getDocs,
+    collection,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+  /* ---------- FIREBASE CONFIG (YOUR PROJECT) ---------- */
+  const firebaseConfig = {
+    apiKey: "AIzaSyCMQDWuUnVCbfr5Sozj9c2XMkISkc7WB00",
+    authDomain: "cmc-stallgrid-passport.firebaseapp.com",
+    projectId: "cmc-stallgrid-passport",
+    storageBucket: "cmc-stallgrid-passport.appspot.com",
+    messagingSenderId: "729984975490",
+    appId: "1:729984975490:web:757bca01efebe3149caa9b"
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  /* ---------- SECTION FADE-IN ---------- */
+  const panels = document.querySelectorAll("section.panel");
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        entry.target.classList.add("active");
+      }
+    });
+  }, { threshold: 0.3 });
+  panels.forEach(p => observer.observe(p));
+
+  /* ---------- TOAST ---------- */
+  const toastEl = document.getElementById("toast");
+  function showToast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    setTimeout(()=>toastEl.classList.remove("show"), 2200);
+  }
+
+  /* ---------- AUTH ---------- */
+  const nameInput     = document.getElementById("name-input");
+  const emailInput    = document.getElementById("email-input");
+  const passInput     = document.getElementById("password-input");
+  const delegateInput = document.getElementById("delegate-input");
+  const authStatus    = document.getElementById("auth-status");
+
+  window.registerUser = async function(){
+    const email = emailInput.value.trim();
+    const pass  = passInput.value.trim();
+    const name  = nameInput.value.trim();
+    const delId = delegateInput.value.trim();
+
+    if(!email || !pass){
+      alert("Email and password are required.");
+      return;
+    }
+
+    try{
+      const cred = await createUserWithEmailAndPassword(auth,email,pass);
+      if(name){
+        await updateProfile(cred.user,{ displayName:name });
+      }
+      await setDoc(doc(db,"users",cred.user.uid),{
+        name: name || null,
+        email,
+        delegateId: delId || null,
+        createdAt: serverTimestamp()
+      },{ merge:true });
+
+      showToast("Registered & signed in");
+    }catch(e){
+      alert(e.message);
+    }
+  };
+
+  window.loginUser = async function(){
+    const email = emailInput.value.trim();
+    const pass  = passInput.value.trim();
+    if(!email || !pass){
+      alert("Enter email and password.");
+      return;
+    }
+    try{
+      await signInWithEmailAndPassword(auth,email,pass);
+      showToast("Logged in");
+    }catch(e){
+      alert(e.message);
+    }
+  };
+
+  onAuthStateChanged(auth, async (user)=>{
+    if(user){
+      const display = user.displayName || user.email || "Delegate";
+      authStatus.textContent = `Signed in as ${display}`;
+      await loadUserVisits(user.uid);
+      await loadLeaderboard();
+    }else{
+      authStatus.textContent = "Not signed in";
+      clearVisitedStalls();
+      document.getElementById("leader-list").innerHTML = "";
+    }
+  });
+
+  /* ---------- STALL GRID ---------- */
+  const gridEl = document.getElementById("grid");
+  const stallIds = [];
+  for(let i=1;i<=15;i++){
+    const id = "Stall " + i;
+    stallIds.push(id);
+    const div = document.createElement("div");
+    div.className = "neon-stall";
+    div.dataset.stallId = id;
+    div.textContent = id;
+    div.addEventListener("click", ()=>openScanner(id));
+    gridEl.appendChild(div);
+  }
+
+  function clearVisitedStalls(){
+    document.querySelectorAll(".neon-stall").forEach(card=>{
+      card.classList.remove("visited");
+      card.textContent = card.dataset.stallId;
+    });
+  }
+
+  function markStallVisited(stallName){
+    const cards = document.querySelectorAll(".neon-stall");
+    cards.forEach(card=>{
+      if(card.dataset.stallId === stallName){
+        card.classList.add("visited");
+        card.textContent = stallName + " ✓";
+      }
+    });
+  }
+
+  async function loadUserVisits(uid){
+    try{
+      const snap = await getDocs(collection(db,"visits",uid,"stalls"));
+      snap.forEach(docSnap=>{
+        markStallVisited(docSnap.id);
+      });
+    }catch(e){
+      console.error("Error loading visits",e);
+    }
+  }
+
+  /* ---------- QR SCANNER ---------- */
+  let html5QrInstance = null;
+  let currentStallName = null;
+  const overlayEl = document.getElementById("qr-overlay");
+
+  window.openScanner = async function(stallName){
+    if(!auth.currentUser){
+      alert("Please login first to record visits.");
+      return;
+    }
+    currentStallName = stallName;
+    overlayEl.style.display = "flex";
+
+    const regionId = "qr-reader";
+
+    if(!html5QrInstance){
+      html5QrInstance = new Html5Qrcode(regionId);
+    }
+
+    try{
+      await html5QrInstance.stop();
+    }catch(_){}
+
+    try{
+      await html5QrInstance.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        async (decodedText) => {
+          try{
+            await html5QrInstance.stop();
+          }catch(_){}
+          overlayEl.style.display = "none";
+          await recordVisit(currentStallName, decodedText);
+        },
+        (_err) => {
+          // ignore scan failures
+        }
+      );
+    }catch(err){
+      overlayEl.style.display = "none";
+      alert("Camera error: " + err);
+    }
+  };
+
+  window.closeScanner = async function(){
+    overlayEl.style.display = "none";
+    if(html5QrInstance){
+      try{
+        await html5QrInstance.stop();
+      }catch(_){}
+    }
+  };
+
+  /* ---------- VISIT RECORDING ---------- */
+  async function recordVisit(stallName, qrText){
+    const user = auth.currentUser;
+    if(!user) return;
+    const uid = user.uid;
+
+    try{
+      await setDoc(
+        doc(db,"visits",uid,"stalls",stallName),
+        {
+          stall: stallName,
+          scannedText: qrText || null,
+          visitedAt: serverTimestamp()
+        },
+        { merge:true }
+      );
+
+      markStallVisited(stallName);
+      showToast(`Recorded visit: ${stallName}`);
+      await loadLeaderboard();
+    }catch(e){
+      console.error("Error recording visit",e);
+      alert("Could not record visit. Please try again.");
+    }
+  }
+
+  /* ---------- LEADERBOARD ---------- */
+  async function loadLeaderboard(){
+    const ul = document.getElementById("leader-list");
+    ul.innerHTML = "<li><span class='name'>Loading…</span></li>";
+
+    try{
+      const visitUsersSnap = await getDocs(collection(db,"visits"));
+      const rows = [];
+
+      for(const userDoc of visitUsersSnap.docs){
+        const uid = userDoc.id;
+        const stallsSnap = await getDocs(collection(db,"visits",uid,"stalls"));
+        const count = stallsSnap.size;
+        if(count === 0) continue;
+
+        let displayName = "Delegate";
+        try{
+          const userProfile = await getDoc(doc(db,"users",uid));
+          if(userProfile.exists()){
+            const data = userProfile.data();
+            displayName = data.name || data.delegateId || data.email || "Delegate";
+          }
+        }catch(_){}
+
+        rows.push({ uid, displayName, count });
+      }
+
+      rows.sort((a,b)=>b.count - a.count);
+
+      if(rows.length === 0){
+        ul.innerHTML = "<li><span class='name'>No visits recorded yet.</span></li>";
+        return;
+      }
+
+      ul.innerHTML = "";
+      rows.forEach((row,index)=>{
+        const li = document.createElement("li");
+        const rank = index+1;
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "name";
+        nameSpan.textContent = `${rank}. ${row.displayName}`;
+        const countSpan = document.createElement("span");
+        countSpan.className = "count";
+        countSpan.textContent = `${row.count} stall${row.count===1?"":"s"}`;
+        li.appendChild(nameSpan);
+        li.appendChild(countSpan);
+        ul.appendChild(li);
+      });
+    }catch(e){
+      console.error("Error loading leaderboard",e);
+      ul.innerHTML = "<li><span class='name'>Error loading leaderboard.</span></li>";
+    }
+  }
+
+  window.manualRefreshLeaderboard = function(){
+    loadLeaderboard().then(()=>showToast("Leaderboard refreshed"));
+  };
+</script>
+
+</body>
+</html>
