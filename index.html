@@ -23,27 +23,12 @@
       -moz-osx-font-smoothing:grayscale;
     }
 
-    /* Hero background (chapel) */
-    body::before{
-      content:"";
-      position:fixed;
-      inset:0;
-      background: url("assets/chapel-hero.jpg") center center / cover no-repeat;
-      z-index:-2;
-      background-attachment: fixed;
-    }
-    /* Slight overlay to make text readable (kept subtle as requested) */
-    body::after{
-      content:"";
-      position:fixed;
-      inset:0;
-      background: linear-gradient(to bottom, rgba(0,0,0,0.04) 6%, rgba(0,0,0,0.20) 92%);
-      z-index:-1;
-    }
+    /* Use --vh for mobile-safe viewport when needed */
+    :root{ --vh: 1vh; }
 
     /* Layout sections */
     section.panel{
-      min-height:100vh;
+      min-height:calc(var(--vh) * 100);
       display:flex;
       align-items:center;
       justify-content:center;
@@ -52,10 +37,32 @@
       opacity:0;
       transform:translateY(22px);
       transition:opacity 0.9s ease, transform 0.9s ease;
+      position:relative;
+      overflow:hidden;
     }
     section.panel.active{opacity:1;transform:translateY(0)}
 
-    /* Logos and header */
+    /*
+      Use per-section background (works reliably on mobile Safari)
+      and keep a subtle overlay so chapel image remains visible but readable.
+    */
+    section.panel::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background: url("assets/chapel-hero.jpg") center center / cover no-repeat fixed;
+      transform: scale(1.03);
+      z-index:-2;
+    }
+    section.panel::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.04) 6%, rgba(0,0,0,0.20) 92%);
+      z-index:-1;
+    }
+
+    /* Logos and header (fixed) */
     .logo-row{
       position:fixed;
       left:0;right:0;top:1rem;
@@ -81,7 +88,7 @@
     .hero-title-main{font-weight:600;font-size:1.15rem;text-shadow:0 2px 10px rgba(0,0,0,0.6)}
     .hero-title-sub{font-size:0.95rem;opacity:0.95;margin-top:0.18rem}
 
-    /* hero lower area (glass cards) */
+    /* hero area (glass cards) */
     .hero-area{position:relative;z-index:30;max-width:920px;width:96%;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:12px;padding-bottom:18vh}
     .glass{
       background:rgba(255,255,255,0.22);
@@ -93,6 +100,7 @@
       box-shadow:0 18px 50px rgba(0,0,0,0.55);
       max-width:820px;
       width:100%;
+      transition:opacity .45s ease, transform .45s ease;
     }
 
     .verse-block{font-family:"Times New Roman",serif;font-style:italic;font-size:1rem;line-height:1.5}
@@ -128,6 +136,7 @@
     #auth-status{font-size:0.86rem;opacity:0.92}
     input{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(180,190,220,0.34);background:rgba(6,10,16,0.65);color:#eef2ff;margin-top:8px;font-size:0.95rem}
     .auth-buttons{display:flex;gap:10px;margin-top:12px}
+    /* pastel register/login */
     .btn-register{background:rgba(154,211,188,0.95);color:#043024;padding:10px 16px;border-radius:999px;border:none;cursor:pointer}
     .btn-login{background:rgba(139,188,230,0.95);color:#06253b;padding:10px 16px;border-radius:999px;border:none;cursor:pointer}
     .hint{font-size:0.85rem;opacity:0.9;margin-top:8px}
@@ -170,10 +179,14 @@
       .hero-title-sub{font-size:0.82rem}
       .verse-block{font-size:0.94rem}
     }
+
+    /* hide helpers */
+    .hidden{display:none!important}
   </style>
 
   <!-- html5-qrcode -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
 </head>
 <body>
 
@@ -193,7 +206,7 @@
   <section id="hero" class="panel" style="align-items:flex-end;padding-bottom:18vh;">
     <div class="hero-area" id="hero-area">
       <!-- Verse glass (separate) -->
-      <div class="glass verse-glass">
+      <div class="glass verse-glass" id="verse-glass">
         <div class="verse-block">
           “Even as the Son of man came not to be ministered unto, but to minister,
           and to give his life a ransom for many.”
@@ -328,20 +341,30 @@
 
   <div id="toast" role="status"></div>
 
-  <!-- Main app logic -->
+  <!-- SMALL STANDALONE SCRIPT: mobile-safe viewport fix -->
+  <script>
+    (function setRealVH(){
+      function apply(){ document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px'); }
+      apply();
+      window.addEventListener('resize', apply, {passive:true});
+      window.addEventListener('orientationchange', apply, {passive:true});
+    })();
+  </script>
+
+  <!-- Main app logic (module) -->
   <script type="module">
+    // Firebase imports
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
     import {
-  getAuth,
-  setPersistence,
-  browserLocalPersistence,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  onAuthStateChanged,
-  signOut,
-  updateProfile
-} from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-
+      getAuth,
+      setPersistence,
+      browserLocalPersistence,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      onAuthStateChanged,
+      signOut,
+      updateProfile
+    } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
     import {
       getFirestore,
       doc,
@@ -349,12 +372,10 @@
       getDoc,
       getDocs,
       collection,
-      serverTimestamp,
-      query,
-      orderBy
+      serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
-    // ---------- FIREBASE CONFIG ----------
+    /* ---------- FIREBASE CONFIG (YOUR PROJECT) ---------- */
     const firebaseConfig = {
       apiKey: "AIzaSyCMQDWuUnVCbfr5Sozj9c2XMkISkc7WB00",
       authDomain: "cmc-stallgrid-passport.firebaseapp.com",
@@ -363,105 +384,127 @@
       messagingSenderId: "729984975490",
       appId: "1:729984975490:web:757bca01efebe3149caa9b"
     };
-    const app = initializeApp(firebaseConfig);
+
+    const app  = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     // Make auth persist across browser restarts (keeps you signed in on phone)
-setPersistence(auth, browserLocalPersistence).catch(err=>{
-  console.warn("Could not set auth persistence:", err);
-});
+    setPersistence(auth, browserLocalPersistence).catch(err=>{
+      console.warn("Could not set auth persistence:", err);
+    });
+    const db   = getFirestore(app);
 
-    const db = getFirestore(app);
-
-    // ELEMENTS
+    /* ---------- SECTION FADE + HERO GLASS OPACITY ---------- */
     const panels = document.querySelectorAll("section.panel");
     const heroLower = document.getElementById("hero-area");
-    const prayerModal = document.getElementById("prayer-modal");
-    const toastEl = document.getElementById("toast");
-    const authStatus = document.getElementById("auth-status");
-    const authCard = document.getElementById("auth-card");
-    const gridCard = document.getElementById("grid-card");
-    const userBanner = document.getElementById("user-banner");
-    const logoutBtn = document.getElementById("logout-btn");
-    const gridEl = document.getElementById("grid");
-    const leaderListEl = document.getElementById("leader-list");
 
-    // Intersection observer for simple crossfade hero -> contest
-    const observer = new IntersectionObserver((entries)=>{
-      entries.forEach(entry=>{
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
         if(entry.isIntersecting){
           entry.target.classList.add("active");
           if(entry.target.id === "contest"){
-            // fade hero cards slightly
-            heroLower.classList.add("fade-out");
-            // subtle blur (keep background visible)
+            // hero cards fade/blur slightly (keep background visible)
+            heroLower.style.opacity = "0.0";
+            // hide hero glass visuals smoothly
             document.querySelectorAll(".glass").forEach(g=>{
-              if(g.closest("#hero")) g.style.opacity = "0.0";
+              if(g.closest("#hero")) g.style.opacity = "0";
             });
-          } else {
-            // when hero visible again restore
+          }
+        }else{
+          // restore when leaving
+          if(entry.target.id === "contest"){
             document.querySelectorAll(".glass").forEach(g=>{
               if(g.closest("#hero")) g.style.opacity = "1";
             });
+            heroLower.style.opacity = "1";
           }
         }
       });
-    },{threshold:0.28});
-    panels.forEach(p=>observer.observe(p));
+    }, { threshold: 0.28 });
+    panels.forEach(p => observer.observe(p));
 
-    // Scroll helpers
-    window.scrollToContest = ()=>document.getElementById("contest").scrollIntoView({behavior:"smooth"});
-    window.scrollToLeaderboard = ()=>document.getElementById("leaderboard").scrollIntoView({behavior:"smooth",block:"start"});
+    /* ---------- SCROLL HELPERS ---------- */
+    window.scrollToContest = function(){
+      document.getElementById("contest").scrollIntoView({ behavior:"smooth" });
+    };
+    window.scrollToLeaderboard = function(){
+      document.getElementById("leaderboard").scrollIntoView({ behavior:"smooth", block:"start" });
+    };
 
-    // Prayer modal
-    window.openPrayerModal = ()=>{ prayerModal.style.display='flex'; prayerModal.setAttribute('aria-hidden','false'); };
-    window.closePrayerModal = ()=>{ prayerModal.style.display='none'; prayerModal.setAttribute('aria-hidden','true'); };
+    /* ---------- PRAYER MODAL ---------- */
+    const prayerModal = document.getElementById("prayer-modal");
+    window.openPrayerModal = function(){
+      prayerModal.style.display = "flex";
+      prayerModal.setAttribute("aria-hidden","false");
+    };
+    window.closePrayerModal = function(){
+      prayerModal.style.display = "none";
+      prayerModal.setAttribute("aria-hidden","true");
+    };
 
-    // Toast
+    /* ---------- TOAST ---------- */
+    const toastEl = document.getElementById("toast");
     function showToast(msg){
       toastEl.textContent = msg;
-      toastEl.classList.add('show');
-      toastEl.style.opacity = '1';
-      setTimeout(()=>{ toastEl.classList.remove('show'); toastEl.style.opacity='0' },2200);
+      toastEl.classList.add("show");
+      setTimeout(()=>toastEl.classList.remove("show"), 2200);
     }
 
-    // AUTH UI wiring
-    const nameInput = document.getElementById("name-input");
-    const emailInput = document.getElementById("email-input");
-    const passInput = document.getElementById("password-input");
+    /* ---------- AUTH ---------- */
+    const nameInput     = document.getElementById("name-input");
+    const emailInput    = document.getElementById("email-input");
+    const passInput     = document.getElementById("password-input");
     const delegateInput = document.getElementById("delegate-input");
+    const authStatus    = document.getElementById("auth-status");
+    const authCard      = document.getElementById("auth-card");
+    const gridCard      = document.getElementById("grid-card");
+    const userBanner    = document.getElementById("user-banner");
+    const logoutBtn     = document.getElementById("logout-btn");
 
-    async function registerUser(){
-      const name = nameInput.value.trim();
+    window.registerUser = async function(){
       const email = emailInput.value.trim();
-      const pass = passInput.value.trim();
-      const del = delegateInput.value.trim();
-      if(!name||!email||!pass){ alert("Name, email and password required"); return; }
+      const pass  = passInput.value.trim();
+      const name  = nameInput.value.trim();
+      const delId = delegateInput.value.trim();
+
+      if(!email || !pass || !name){
+        alert("Name, email and password are required.");
+        return;
+      }
+
       try{
         const cred = await createUserWithEmailAndPassword(auth,email,pass);
-        if(name) await updateProfile(cred.user,{displayName:name});
-        await setDoc(doc(db,"users",cred.user.uid),{ name, email, delegateId: del||null, createdAt: serverTimestamp() },{merge:true});
-        showToast("Registered & signed in");
-        // show grid
-        document.getElementById("passport").scrollIntoView({behavior:"smooth"});
-      }catch(e){
-        alert(e.message||String(e));
-      }
-    }
-    window.registerUser = registerUser;
+        if(name){
+          await updateProfile(cred.user,{ displayName:name });
+        }
+        await setDoc(doc(db,"users",cred.user.uid),{
+          name: name || null,
+          email,
+          delegateId: delId || null,
+          createdAt: serverTimestamp()
+        },{ merge:true });
 
-    async function loginUser(){
+        showToast("Registered & signed in");
+        document.getElementById("passport").scrollIntoView({ behavior:"smooth" });
+      }catch(e){
+        alert(e.message);
+      }
+    };
+
+    window.loginUser = async function(){
       const email = emailInput.value.trim();
-      const pass = passInput.value.trim();
-      if(!email||!pass){ alert("Enter email & password"); return; }
+      const pass  = passInput.value.trim();
+      if(!email || !pass){
+        alert("Enter email and password.");
+        return;
+      }
       try{
         await signInWithEmailAndPassword(auth,email,pass);
         showToast("Logged in");
-        document.getElementById("passport").scrollIntoView({behavior:"smooth"});
+        document.getElementById("passport").scrollIntoView({ behavior:"smooth" });
       }catch(e){
-        alert(e.message||String(e));
+        alert(e.message);
       }
-    }
-    window.loginUser = loginUser;
+    };
 
     window.logoutUser = async function(){
       try{
@@ -469,6 +512,7 @@ setPersistence(auth, browserLocalPersistence).catch(err=>{
         showToast("Logged out");
       }catch(e){
         console.error(e);
+        alert("Could not log out.");
       }
     };
 
@@ -476,29 +520,31 @@ setPersistence(auth, browserLocalPersistence).catch(err=>{
       if(user){
         const display = user.displayName || user.email || "Delegate";
         authStatus.textContent = `Signed in as ${display}`;
+
+        // show grid, hide auth
         authCard.classList.add("hidden");
         gridCard.classList.remove("hidden");
         logoutBtn.classList.remove("hidden");
 
-        // fetch profile
+        // fetch user profile for banner
         try{
-          const ps = await getDoc(doc(db,"users",user.uid));
-          if(ps.exists()){
-            const data = ps.data();
+          const profileSnap = await getDoc(doc(db,"users",user.uid));
+          if(profileSnap.exists()){
+            const data = profileSnap.data();
             const nm = data.name || display;
-            const del = data.delegateId;
-            userBanner.textContent = del ? `Welcome, ${nm} (Delegate ID: ${del})` : `Welcome, ${nm}`;
+            const delId = data.delegateId;
+            userBanner.textContent = delId ? `Welcome, ${nm} (Delegate ID: ${delId})` : `Welcome, ${nm}`;
           }else{
             userBanner.textContent = `Welcome, ${display}`;
           }
-        }catch(e){
+        }catch(_){
           userBanner.textContent = `Welcome, ${display}`;
         }
         userBanner.classList.remove("hidden");
 
         await loadUserVisits(user.uid);
         await loadLeaderboard();
-      } else {
+      }else{
         authStatus.textContent = "Not signed in";
         authCard.classList.remove("hidden");
         gridCard.classList.add("hidden");
@@ -506,11 +552,12 @@ setPersistence(auth, browserLocalPersistence).catch(err=>{
         logoutBtn.classList.add("hidden");
         // clear UI
         clearVisitedStalls();
-        leaderListEl.innerHTML = "";
+        document.getElementById("leader-list").innerHTML = "";
       }
     });
 
-    // STALL GRID: dynamic from Firestore 'stalls' collection (Option A: simple list)
+    /* ---------- STALL GRID (dynamic from Firestore; fallback if none) ---------- */
+    const gridEl = document.getElementById("grid");
     let stallDocs = [];
     async function buildGridFromFirestore(){
       gridEl.innerHTML = "";
@@ -519,8 +566,7 @@ setPersistence(auth, browserLocalPersistence).catch(err=>{
         if(snap.empty){
           // fallback: generate 12 generic stalls if none exist
           for(let i=1;i<=12;i++){
-            const id = `Stall ${i}`;
-            createStallCard({ id, name: id});
+            createStallCard({ id:`Stall ${i}`, name:`Stall ${i}`});
           }
           return;
         }
@@ -528,16 +574,13 @@ setPersistence(auth, browserLocalPersistence).catch(err=>{
         snap.forEach(docSnap=>{
           const docId = docSnap.id;
           const data = docSnap.data() || {};
-          // name fallback: doc.id or data.name
           const name = data.name || docId;
           stallDocs.push({ id: docId, name });
         });
-        // sort by id if possible
         stallDocs.sort((a,b)=> a.name.localeCompare(b.name,undefined,{numeric:true}));
         stallDocs.forEach(s=>createStallCard(s));
       }catch(e){
         console.error("Error loading stalls",e);
-        // fallback generic
         for(let i=1;i<=12;i++) createStallCard({id:`Stall ${i}`,name:`Stall ${i}`});
       }
     }
@@ -578,7 +621,7 @@ setPersistence(auth, browserLocalPersistence).catch(err=>{
       }
     }
 
-    // QR scanner using html5-qrcode
+    /* ---------- QR SCANNER ---------- */
     let html5QrInstance = null;
     let currentStallName = null;
     const qrOverlay = document.getElementById("qr-overlay");
@@ -633,7 +676,8 @@ setPersistence(auth, browserLocalPersistence).catch(err=>{
       }
     }
 
-    // Firestore-native leaderboard (counts visits per user)
+    /* ---------- LEADERBOARD ---------- */
+    const leaderListEl = document.getElementById("leader-list");
     async function loadLeaderboard(){
       leaderListEl.innerHTML = '<div style="padding:8px 0;color:rgba(240,248,255,0.9)">Loading…</div>';
       try{
@@ -673,13 +717,13 @@ setPersistence(auth, browserLocalPersistence).catch(err=>{
       loadLeaderboard().then(()=>showToast("Leaderboard refreshed"));
     };
 
-    // initial build: stalls + leader
+    // build grid (from Firestore)
     await buildGridFromFirestore();
-    // auto-load leaderboard on page load if user already signed in (onAuthStateChanged handles it)
-
-    // call loadLeaderboard occasionally as extra safety (but only when visible)
+    // periodic leaderboard refresh (only when page visible)
     let leaderTimer = setInterval(()=>{ if(document.visibilityState==='visible') loadLeaderboard(); }, 15000);
 
+    // end module
   </script>
+
 </body>
 </html>
