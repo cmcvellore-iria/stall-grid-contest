@@ -159,6 +159,17 @@
     #toast{position:fixed;left:50%;transform:translateX(-50%) translateY(12px);bottom:28px;background:#021021;color:#e9f9ff;padding:10px 16px;border-radius:999px;opacity:0;pointer-events:none;z-index:200;transition:opacity .28s,transform .28s}
     #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
+    /* --- MOBILE SAFE VIEWPORT FIX (iPhone Safari) --- */
+:root{
+  --vh: 1vh;
+}
+
+.fix-h-screen{
+  height: calc(var(--vh) * 100);
+  min-height: calc(var(--vh) * 100);
+  width: 100%;
+}
+
     /* responsive tweaks */
     @media(max-width:820px){
       .logo-row img{height:56px}
@@ -682,4 +693,5 @@ setPersistence(auth, browserLocalPersistence).catch(err=>{
   </script>
 </body>
 </html>
+
 
