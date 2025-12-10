@@ -341,15 +341,6 @@
 
   <!-- Main app logic -->
   <script type="module">
-
-    /* ---------- MOBILE SAFARI VIEWPORT FIX ---------- */
-function setRealVH(){
-  document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px');
-}
-setRealVH();
-window.addEventListener('resize', setRealVH);
-window.addEventListener('orientationchange', setRealVH);
-
     import {
   getAuth,
   setPersistence,
@@ -699,9 +690,18 @@ setPersistence(auth, browserLocalPersistence).catch(err=>{
     // call loadLeaderboard occasionally as extra safety (but only when visible)
     let leaderTimer = setInterval(()=>{ if(document.visibilityState==='visible') loadLeaderboard(); }, 15000);
 
+     /* ---------- MOBILE SAFARI VIEWPORT FIX ---------- */
+function setRealVH(){
+  document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px');
+}
+setRealVH();
+window.addEventListener('resize', setRealVH);
+window.addEventListener('orientationchange', setRealVH);
+
   </script>
 </body>
 </html>
+
 
 
 
