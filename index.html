@@ -77,14 +77,19 @@
     .logo-row .left,.logo-row .right{pointer-events:auto}
 
     .hero-title-wrap{
-      position:fixed;
-      top:5.25rem;
-      left:50%;
-      transform:translateX(-50%);
-      z-index:40;
-      text-align:center;
-      pointer-events:none;
-    }
+  position:fixed;
+  top:5.25rem;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:40;
+  text-align:center;
+  pointer-events:none;
+  transition: opacity 0.6s ease;
+}
+.hero-title-wrap.fade-out{
+  opacity:0;
+}
+
     .hero-title-main{font-weight:600;font-size:1.15rem;text-shadow:0 2px 10px rgba(0,0,0,0.6)}
     .hero-title-sub{font-size:0.95rem;opacity:0.95;margin-top:0.18rem}
 
@@ -727,3 +732,4 @@
 
 </body>
 </html>
+
