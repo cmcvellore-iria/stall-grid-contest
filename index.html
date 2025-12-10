@@ -330,15 +330,17 @@
 
   <!-- Main app logic -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
     import {
-      getAuth,
-      createUserWithEmailAndPassword,
-      signInWithEmailAndPassword,
-      onAuthStateChanged,
-      signOut,
-      updateProfile
-    } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+  getAuth,
+  setPersistence,
+  browserLocalPersistence,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut,
+  updateProfile
+} from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+    
     import {
       getFirestore,
       doc,
@@ -362,6 +364,11 @@
     };
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    // Make auth persist across browser restarts (keeps you signed in on phone)
+setPersistence(auth, browserLocalPersistence).catch(err=>{
+  console.warn("Could not set auth persistence:", err);
+});
+
     const db = getFirestore(app);
 
     // ELEMENTS
@@ -675,3 +682,4 @@
   </script>
 </body>
 </html>
+
