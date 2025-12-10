@@ -1180,26 +1180,10 @@
   window.manualRefreshLeaderboard = function(){
     loadLeaderboard().then(()=>showToast("Leaderboard refreshed"));
   };
-  async function loadLeaderboard(){
-  const ul=document.getElementById("leader-list");
-  ul.innerHTML="Loading…";
-  
-  const users=await getDocs(collection(db,"users"));
-  const list=[];
-
-  for(const u of users.docs){
-    const uid=u.id;
-    const stalls=await getDocs(collection(db,"visits",uid,"stalls"));
-    const count=stalls.size;
-    if(count>0) list.push({name:u.data().name||uid,count});
-  }
-  
-  list.sort((a,b)=>b.count-a.count);
-  ul.innerHTML=list.map((p,i)=>`${i+1}. ${p.name} — ${p.count}`).join("<br>");
-}
 
 </script>
 
 </body>
 </html>
+
 
