@@ -159,17 +159,6 @@
     #toast{position:fixed;left:50%;transform:translateX(-50%) translateY(12px);bottom:28px;background:#021021;color:#e9f9ff;padding:10px 16px;border-radius:999px;opacity:0;pointer-events:none;z-index:200;transition:opacity .28s,transform .28s}
     #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-    /* --- MOBILE SAFE VIEWPORT FIX (iPhone Safari) --- */
-:root{
-  --vh: 1vh;
-}
-
-.fix-h-screen{
-  height: calc(var(--vh) * 100);
-  min-height: calc(var(--vh) * 100);
-  width: 100%;
-}
-
     /* responsive tweaks */
     @media(max-width:820px){
       .logo-row img{height:56px}
@@ -341,6 +330,7 @@
 
   <!-- Main app logic -->
   <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
     import {
   getAuth,
   setPersistence,
@@ -351,7 +341,7 @@
   signOut,
   updateProfile
 } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-    
+
     import {
       getFirestore,
       doc,
@@ -690,18 +680,6 @@ setPersistence(auth, browserLocalPersistence).catch(err=>{
     // call loadLeaderboard occasionally as extra safety (but only when visible)
     let leaderTimer = setInterval(()=>{ if(document.visibilityState==='visible') loadLeaderboard(); }, 15000);
 
-     /* ---------- MOBILE SAFARI VIEWPORT FIX ---------- */
-function setRealVH(){
-  document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px');
-}
-setRealVH();
-window.addEventListener('resize', setRealVH);
-window.addEventListener('orientationchange', setRealVH);
-
   </script>
 </body>
 </html>
-
-
-
-
