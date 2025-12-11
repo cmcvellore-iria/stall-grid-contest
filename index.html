@@ -12,197 +12,158 @@
   -->
 
   <style>
-    *{box-sizing:border-box;margin:0;padding:0}
+    /* ----------------- BASE & MOBILE VH FIX ----------------- */
+    :root{ --vh:1vh; }
     html,body{height:100%}
-    body{
-      font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
-      color:#f8fafc;
-      background:#020617;
-      overflow-x:hidden;
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
-    }
+    body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial; margin:0; color:#f8fafc; background:#020617; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; overflow-x:hidden;}
+    /* set --vh to work around mobile browser chrome */
+    .fix-h-screen{height:calc(var(--vh) * 100); min-height:calc(var(--vh) * 100);}
 
-    /* HERO background (full-screen) */
-    #hero{
-      position:relative;
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      overflow:hidden;
-    }
-    #hero::before{
+    /* ----------------- HERO BACKGROUND (fixed, slightly lighter) ----------------- */
+    body::before{
       content:"";
-      position:absolute;
-      inset:0;
-      background: url("assets/chapel-hero.jpg") center 12% / cover no-repeat;
+      position:fixed; inset:0;
+      background: url("assets/chapel-hero.jpg") center center / cover no-repeat;
       z-index:-3;
-      filter:brightness(1.08); /* 10% brighter as requested */
       background-attachment: fixed;
+      transform: scale(1.02);
     }
-    /* gentle global overlay to keep text readable but let chapel show */
-    #hero::after{
-      content:"";
-      position:absolute;
-      inset:0;
-      background:linear-gradient(to bottom, rgba(0,0,0,0.02) 5%, rgba(0,0,0,0.18) 90%);
-      z-index:-2;
+    body::after{
+      content:""; position:fixed; inset:0; z-index:-2;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.02) 5%, rgba(0,0,0,0.16) 92%);
     }
 
-    /* fixed logos & title */
+    /* ----------------- LAYOUT PANELS & TRANSITIONS ----------------- */
+    section.panel{ position:relative; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:0 1.2rem 18vh; text-align:center; overflow:hidden; opacity:0; transform:translateY(28px); transition:opacity .9s ease, transform .9s ease; }
+    section.panel.active{ opacity:1; transform:translateY(0); }
+
+    /* ----------------- LOGOS & FIXED HERO TITLE ----------------- */
     .logo-row{
-      position:fixed;
-      top:0.9rem;
-      left:0; right:0;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      padding:0 1.25rem;
-      z-index:60;
-      pointer-events:none;
+      position:fixed; left:0; right:0; top:1rem; z-index:60;
+      display:flex; justify-content:space-between; align-items:center; padding:0 1.2rem; pointer-events:none;
     }
-    .logo-row img{height:83px;pointer-events:auto} /* +15% from 72 -> 83 */
+    .logo-row img{ height:83px; pointer-events:auto; filter: drop-shadow(0 6px 18px rgba(0,0,0,0.6)); } /* ~15% larger */
     .hero-title-wrap{
-      position:fixed;
-      top:3.6rem;
-      left:50%;
-      transform:translateX(-50%);
-      z-index:50;
-      text-align:center;
-      pointer-events:none;
-      color:#0b1a2b;
-      text-shadow:0 1px 0 rgba(255,255,255,0.06);
+      position:fixed; top:5rem; left:50%; transform:translateX(-50%); z-index:55; text-align:center; pointer-events:none; transition:opacity .45s ease, transform .45s ease;
     }
-    .hero-title-main{font-weight:700;font-size:1.7rem;color: #071033}
-    .hero-title-sub{font-size:1rem;opacity:0.92;margin-top:0.2rem;color:#0b1a2b}
+    .hero-title-main{ font-weight:700; font-size:1.18rem; text-shadow:0 2px 8px rgba(0,0,0,0.6); }
+    .hero-title-sub{ font-size:0.92rem; margin-top:0.18rem; opacity:0.95; }
 
-    /* POND AREA: position glass boxes low on the hero, above the pond */
-    .hero-bottom-wrap{
-      position:absolute;
-      left:50%;
-      transform:translateX(-50%);
-      z-index:40;
-      width:94%;
-      max-width:1080px;
-      bottom:10vh; /* park near the pond; tweak to taste */
-      display:flex;
-      flex-direction:column;
-      gap:14px;
-      align-items:center;
-      pointer-events:auto;
-    }
+    /* class applied to fade the fixed title away */
+    .hero-title-wrap.hidden { opacity:0; transform:translate(-50%,-6px); }
 
-    /* frosted glass card (readable, not colored) */
-    .glass{
-      width:100%;
-      border-radius:14px;
-      padding:16px 20px;
-      background:rgba(255,255,255,0.12);
-      backdrop-filter: blur(10px) saturate(120%);
-      border:1px solid rgba(255,255,255,0.15);
-      color:#041022;
-      box-shadow:0 10px 36px rgba(0,0,0,0.45);
-      transition:transform 0.7s cubic-bezier(.2,.9,.2,1), opacity 0.7s ease;
-      opacity:0; transform:translateY(12px);
-    }
-    .glass.revealed{opacity:1; transform:translateY(0)}
-    .verse-block{font-family:"Times New Roman",serif;font-style:italic;font-size:1.05rem;line-height:1.45;color:#082033}
-    .verse-ref{font-size:0.9rem;margin-top:8px;display:block;color:#072033;opacity:0.95}
+    /* ----------------- HERO GLASS BOXES (floating near pond level) ----------------- */
+    .hero-inner { position:relative; z-index:50; width:100%; max-width:980px; margin:0 auto; display:flex; flex-direction:column; align-items:center; gap:12px; padding-bottom:12vh; pointer-events:auto; }
+    .hero-glass { width:92%; max-width:760px; background:rgba(255,255,255,0.18); backdrop-filter: blur(10px); border-radius:14px; border:1px solid rgba(255,255,255,0.36); box-shadow:0 18px 50px rgba(0,0,0,0.6); padding:12px 16px; color:#031026; transform:translateY(18px); opacity:0; transition:opacity .9s ease, transform .9s ease; }
 
-    .ida-title{font-family:"Times New Roman",serif;font-weight:700;font-size:1.02rem;text-align:center;margin-bottom:6px;color:#072033}
-    .ida-preview{font-family:"Times New Roman",serif;font-size:0.95rem;text-align:center;color:#07303a;opacity:0.96}
+    /* Verse style uses Times New Roman slightly italic */
+    .verse-block{ font-family:"Times New Roman",serif; font-style:italic; font-size:1rem; line-height:1.45; }
+    .verse-ref{ display:block; margin-top:6px; font-size:0.86rem; opacity:0.92; }
 
-    /* actions below the glass boxes (visible on first view) */
-    .hero-actions{
-      display:flex;
-      gap:18px;
-      align-items:center;
-      margin-top:6px;
-      z-index:45;
-    }
-    .link-button{
-      padding:10px 18px;border-radius:999px;border:2px solid rgba(255,255,255,0.14);
-      background:rgba(9,14,21,0.18);color:#0b1730;font-weight:700;cursor:pointer;
-      backdrop-filter:blur(4px);
-    }
-    .scroll-hint{color:#081a2b;opacity:0.9;font-weight:600}
+    .ida-title{ font-family:"Times New Roman",serif; font-style:italic; font-size:0.95rem; margin-top:6px; }
+    .ida-preview{ font-family:"Times New Roman",serif; font-style:italic; font-size:0.92rem; opacity:0.96; margin-top:6px; }
 
-    /* PASSPORT section placeholder (follows below hero) */
-    section.panel{
-      min-height:100vh;
-      display:flex;
-      align-items:flex-start;
-      justify-content:center;
-      padding:6vh 1.25rem 10vh;
-      background:transparent;
-    }
+    /* Entrance animation: they come in one after another (delays set via JS) */
+    .hero-glass.enter { opacity:1; transform:translateY(0); }
 
-    /* Grid and cards inside passport area */
-    .content-wrap{max-width:1024px;width:98%;margin:0 auto;display:flex;flex-direction:column;gap:18px}
-    .auth-card,.grid-card{padding:18px;border-radius:14px;text-align:left;background:rgba(255,255,255,0.06);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.06)}
+    .hero-actions { margin-top:10px; display:flex; flex-direction:column; gap:8px; align-items:center; }
 
-    input{width:100%;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);background:rgba(6,10,16,0.6);color:#eef2ff;margin-top:8px;font-size:0.95rem}
+    .link-button { padding:9px 14px; border-radius:999px; border:1px solid rgba(255,255,255,0.7); background:rgba(15,23,42,0.36); color:#eef2ff; cursor:pointer; font-weight:600; }
+    .link-button:hover{ transform:translateY(-2px); }
 
-    .grid-container{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-top:12px}
-    .neon-stall{
-      padding:12px;border-radius:12px;background:radial-gradient(circle at top,#071025,#02101a 85%);border:1px solid rgba(34,211,238,0.48);
-      color:#a8f6ff;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;
-      box-shadow:0 10px 24px rgba(10,40,60,0.45);
-      transition:transform .28s cubic-bezier(.2,.9,.2,1), box-shadow .28s, border-color .28s;
-    }
-    /* subtle neon pop (restored) */
-    .neon-stall:hover{transform:translateY(-6px) scale(1.02);box-shadow:0 22px 56px rgba(25,120,170,0.18);border-color:rgba(34,211,238,0.86)}
+    .scroll-to-contest { margin-top:6px; font-size:0.82rem; letter-spacing:0.16em; cursor:pointer; color:#eaf5ff; display:inline-flex; align-items:center; gap:8px; }
+    .scroll-to-contest .arrow{ font-size:1.2rem; animation:bounce 1.6s infinite; }
+    @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(4px)}}
 
-    /* visited state */
-    .neon-stall.visited{border-color:rgba(74,222,128,0.95);box-shadow:0 18px 36px rgba(20,60,40,0.5);background:linear-gradient(180deg,#032a16,#011212);color:#ccffd6}
+    /* ----------------- CONTEST CARD ----------------- */
+    .contest-card{ width:92%; max-width:820px; background:rgba(255,255,255,0.12); backdrop-filter:blur(10px); border-radius:16px; border:1px solid rgba(255,255,255,0.22); padding:18px; box-shadow:0 18px 55px rgba(0,0,0,0.8); text-align:left; color:#e8f6ff; }
+    .pill{ display:inline-block; padding:6px 10px; border-radius:999px; background:rgba(9,14,21,0.72); font-size:12px; letter-spacing:.16em; color:#e6eef9; border:1px solid rgba(200,210,230,0.12); }
+    .contest-card h2{ font-size:1.28rem; margin:10px 0; }
 
-    /* leaderboard */
-    #leader-list{margin-top:8px;font-size:0.94rem;color:#e8f6ff;max-height:260px;overflow:auto;padding-right:6px}
-    #leader-list .row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+    /* ----------------- PASSPORT / AUTH / GRID ----------------- */
+    #passport{ align-items:flex-start; padding-top:18vh; }
+    .content-wrap{ width:96%; max-width:1024px; margin:0 auto; display:flex; flex-direction:column; gap:16px; }
+    .auth-card,.grid-card{ background:rgba(255,255,255,0.08); backdrop-filter:blur(8px); border-radius:14px; border:1px solid rgba(255,255,255,0.12); padding:14px; box-shadow:0 14px 36px rgba(0,0,0,0.6); color:#eef6ff; }
+    .auth-top{ display:flex; justify-content:space-between; align-items:center; gap:10px; }
+    .auth-title{ font-weight:700; }
 
-    /* QR overlay and toast */
-    #qr-overlay{position:fixed;inset:0;background:rgba(2,6,12,0.92);display:none;align-items:center;justify-content:center;z-index:130;padding:18px}
-    #qr-reader{width:360px;max-width:96%;background:#000;border-radius:12px;overflow:hidden}
-    #toast{position:fixed;left:50%;transform:translateX(-50%) translateY(12px);bottom:28px;background:#021021;color:#e9f9ff;padding:10px 16px;border-radius:999px;opacity:0;pointer-events:none;z-index:200;transition:opacity .28s,transform .28s}
-    #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    input{ width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(180,190,220,0.12); background:rgba(6,10,16,0.65); color:#eef2ff; margin-top:8px; font-size:0.95rem; }
+    input::placeholder{ color:rgba(209,213,219,0.7); }
+
+    .auth-buttons{ display:flex; gap:10px; margin-top:12px; }
+    .btn-register{ background:rgba(154,211,188,0.95); color:#043024; padding:10px 14px; border-radius:999px; border:none; font-weight:700; cursor:pointer; }
+    .btn-login{ background:rgba(139,188,230,0.95); color:#06253b; padding:10px 14px; border-radius:999px; border:none; font-weight:700; cursor:pointer; }
+    .btn-ghost{ background:transparent; border:1px solid rgba(255,255,255,0.12); color:#eef2ff; padding:8px 12px; border-radius:999px; cursor:pointer; }
+
+    .hint{ font-size:0.86rem; opacity:0.94; margin-top:8px; color:rgba(235,245,255,0.9); }
+
+    /* GRID */
+    .grid-header{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:6px; }
+    .grid-container{ display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:10px; margin-top:10px; }
+    .neon-stall{ padding:12px; border-radius:12px; background: radial-gradient(circle at top,#071025,#02101a 85%); border:1px solid rgba(34,211,238,0.48); color:#a8f6ff; font-weight:700; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; box-shadow:0 10px 24px rgba(10,40,60,0.55); transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+    .neon-stall:hover{ transform:translateY(-6px); box-shadow:0 24px 48px rgba(8,36,60,0.85); }
+    .neon-stall.pop { transform:scale(1.03); }
+    .neon-stall.visited{ border-color:rgba(74,222,128,0.95); box-shadow:0 18px 36px rgba(20,60,40,0.6); background:linear-gradient(180deg,#032a16,#011212); color:#ccffd6; }
+
+    /* LEADERBOARD */
+    #leaderboard{ margin-top:12px; }
+    .leader-header{ display:flex; justify-content:space-between; align-items:center; gap:8px; }
+    #leader-list{ margin-top:8px; font-size:0.92rem; color:#e8f6ff; max-height:280px; overflow:auto; text-align:left; }
+    #leader-list .row{ display:flex; justify-content:space-between; padding:10px 6px; border-bottom:1px solid rgba(255,255,255,0.03); }
+
+    .btn-refresh { background:rgba(139,188,230,0.95); color:#06253b; padding:8px 12px; border-radius:999px; border:none; cursor:pointer; }
+
+    /* QR overlay */
+    #qr-overlay{ position:fixed; inset:0; background:rgba(2,6,12,0.92); display:none; align-items:center; justify-content:center; z-index:150; padding:18px; }
+    #qr-reader{ width:360px; max-width:96%; background:#000; border-radius:12px; overflow:hidden; }
+
+    /* Prayer modal (bright, frosted) */
+    #prayer-modal{ position:fixed; inset:0; background:rgba(3,6,12,0.65); display:none; align-items:center; justify-content:center; z-index:160; padding:16px; }
+    .prayer-card{ max-width:700px; width:100%; background:rgba(255,255,255,0.92); color:#021024; padding:18px; border-radius:12px; box-shadow:0 24px 60px rgba(0,0,0,0.95); max-height:80vh; overflow:auto; font-family:"Times New Roman",serif; font-style:italic; }
+
+    /* Toast */
+    #toast{ position:fixed; left:50%; transform:translateX(-50%) translateY(12px); bottom:28px; background:#021021; color:#e9f9ff; padding:10px 16px; border-radius:999px; opacity:0; pointer-events:none; z-index:200; transition:opacity .28s, transform .28s; }
+    #toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 
     /* small screens */
     @media(max-width:820px){
-      .logo-row img{height:66px}
-      .hero-title-wrap{top:3.2rem}
-      .hero-bottom-wrap{bottom:8vh;width:96%}
-      .glass{padding:12px}
-      .neon-stall{padding:10px}
+      .logo-row img{ height:64px }
+      .hero-title-wrap{ top:4.2rem; }
+      .neon-stall{ padding:10px }
+      .hero-glass{ width:94%; }
     }
     @media(max-width:420px){
-      .hero-title-main{font-size:1.25rem}
-      .verse-block{font-size:0.95rem}
+      .hero-title-main{ font-size:1rem }
+      .verse-block{ font-size:0.96rem }
     }
+
+    /* utilities */
+    .hidden{ display:none !important; }
   </style>
 
   <!-- html5-qrcode -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
-<body>
+<body class="fix-h-screen">
 
-  <!-- Logos -->
+  <!-- LOGOS (fixed) -->
   <div class="logo-row">
-    <div class="left"><img src="assets/iria2025.png" alt="IRIA Logo"></div>
-    <div class="right"><img src="assets/cmc.png" alt="CMC Logo"></div>
+    <div style="pointer-events:auto"><img src="assets/iria2025.png" alt="IRIA Logo"></div>
+    <div style="pointer-events:auto"><img src="assets/cmc.png" alt="CMC Logo"></div>
   </div>
 
-  <!-- Hero title (fixed) -->
-  <div class="hero-title-wrap" aria-hidden="true">
+  <!-- HERO TITLE (fixed top middle) -->
+  <div class="hero-title-wrap" id="hero-title">
     <div class="hero-title-main">Welcome to the 78th Annual TNPY IRIA Conference</div>
     <div class="hero-title-sub">at Christian Medical College, Vellore</div>
   </div>
 
-  <!-- HERO -->
-  <section id="hero">
-    <!-- bottom glass cluster (placed at pond level) -->
-    <div class="hero-bottom-wrap" id="hero-bottom">
-      <div class="glass verse-glass" id="verse-glass" aria-hidden="true">
+  <!-- HERO PANEL -->
+  <section id="hero" class="panel" style="align-items:flex-end; padding-bottom:18vh;">
+    <div class="hero-inner" id="hero-inner">
+
+      <!-- Verse glass (low, pond-level) -->
+      <div class="hero-glass" id="verse-glass" aria-hidden="false">
         <div class="verse-block">
           “Even as the Son of man came not to be ministered unto, but to minister,
           and to give his life a ransom for many.”
@@ -210,67 +171,107 @@
         </div>
       </div>
 
-      <div class="glass" id="ida-glass" aria-hidden="true">
+      <!-- Ida glass (follows verse) -->
+      <div class="hero-glass" id="ida-glass" style="transition-delay:0.12s">
         <div class="ida-title">Aunt Ida’s Prayer</div>
         <div class="ida-preview">Father, whose life is within me, and whose love is ever about me…</div>
+
+        <div class="hero-actions">
+          <button class="link-button" onclick="openPrayerModal()">Read the full prayer</button>
+          <div class="scroll-to-contest" onclick="scrollToContest()">
+            Scroll to start the Stall Grid Contest
+            <span class="arrow">↓</span>
+          </div>
+        </div>
       </div>
 
-      <div class="hero-actions" aria-hidden="true">
-        <button class="link-button" onclick="openPrayerModal()">Read the full prayer</button>
-        <div class="scroll-hint" onclick="document.getElementById('passport').scrollIntoView({behavior:'smooth'})">Scroll to start the Stall Grid Contest ↓</div>
-      </div>
     </div>
   </section>
 
-  <!-- Passport / auth / grid -->
+  <!-- CONTEST INTRO -->
+  <section id="contest" class="panel">
+    <div class="contest-card">
+      <div class="pill">Stall Grid Contest</div>
+      <h2>Explore, Scan & Win at IRIA 2025</h2>
+      <p>
+        During the 78<sup>th</sup> Annual TNPY IRIA Conference at CMC Vellore,
+        the Stall Grid Passport turns your visit to the trade area into an Apple-like
+        interactive challenge. Collect digital ticks by scanning QR codes at each stall.
+      </p>
+      <p><strong>How it works:</strong></p>
+      <ul>
+        <li>Register once with your email and a password (on Render backend).</li>
+        <li>Login on your phone or tablet — your session is kept locally.</li>
+        <li>Tap a stall tile and scan the secure QR at that exhibitor’s stall.</li>
+        <li>Backend verifies HMAC token & expiry and records the visit.</li>
+        <li>Your total visited stalls update the live leaderboard on this page.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- PASSPORT / AUTH / GRID -->
   <section id="passport" class="panel">
     <div class="content-wrap">
-      <!-- Auth card -->
-      <div class="auth-card glass" id="auth-card" aria-live="polite">
-        <div style="display:flex;justify-content:space-between;align-items:center">
+
+      <!-- AUTH CARD -->
+      <div class="auth-card" id="auth-card">
+        <div class="auth-top">
           <div>
             <div class="pill">Delegate Login</div>
-            <div style="font-weight:700;margin-top:8px">Access Your Stall Grid Passport</div>
+            <div class="auth-title">Access Your Stall Grid Passport</div>
           </div>
-          <div id="auth-status" style="opacity:0.92">Not signed in</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div id="auth-status">Not signed in</div>
+            <div id="logout-btn" class="hidden"><button class="btn-ghost" onclick="logoutUser()">Logout</button></div>
+          </div>
         </div>
 
-        <input id="name-input" placeholder="Name (as registration)" />
-        <input id="email-input" placeholder="Email (same as registration)" />
+        <input id="name-input" placeholder="Full name (for registration)" />
+        <input id="email-input" placeholder="Email (for login)" />
         <input id="delegate-input" placeholder="Delegate ID (optional)" />
         <input id="password-input" type="password" placeholder="Password" />
 
-        <div style="display:flex;gap:10px;margin-top:12px">
-          <button style="background:#9adebc;color:#043024;padding:10px 16px;border-radius:999px;border:none;cursor:pointer" onclick="registerUser()">Register</button>
-          <button style="background:#8bbce6;color:#06253b;padding:10px 16px;border-radius:999px;border:none;cursor:pointer" onclick="loginUser()">Login</button>
+        <div class="auth-buttons">
+          <button class="btn-register" onclick="registerUser()">Register</button>
+          <button class="btn-login" onclick="loginUser()">Login</button>
         </div>
 
-        <p style="margin-top:12px;opacity:0.9">Use the same name and email as your conference registration to be eligible for prizes.</p>
+        <p class="hint">
+          Use the same name and email as your conference registration to be eligible for prizes.
+          Choose a password different from your email password.
+        </p>
       </div>
 
-      <!-- Grid + leaderboard -->
-      <div class="grid-card glass" id="grid-card" style="margin-top:12px">
-        <div style="display:flex;justify-content:space-between;align-items:center">
+      <!-- GRID & LEADERBOARD (hidden until login) -->
+      <div class="grid-card hidden" id="grid-card">
+        <div class="grid-header">
           <div>
             <div class="pill">Stall Grid</div>
-            <div style="font-weight:700;margin-top:8px">Scan QR at Each Exhibitor</div>
+            <div style="font-size:0.98rem;font-weight:600;margin-top:6px;">Scan QR at Each Exhibitor</div>
+            <p style="font-size:0.85rem;opacity:0.95;margin-top:6px;">Tap a stall tile to open the camera. After scanning, the stall will glow and your visit counts towards the live leaderboard.</p>
           </div>
-          <button style="padding:8px 12px;border-radius:999px;background:#8bbce6;border:none;cursor:pointer" onclick="manualRefreshLeaderboard()">Refresh</button>
         </div>
 
-        <div id="user-banner" style="margin-top:8px;opacity:0.95;display:none"></div>
+        <div id="user-banner" class="welcome-line hidden" style="font-weight:700;"></div>
 
         <div id="grid" class="grid-container" aria-live="polite"></div>
 
-        <div id="leaderboard" style="margin-top:16px">
-          <div style="display:flex;justify-content:space-between;align-items:center">
+        <div id="leaderboard" style="margin-top:16px;">
+          <div class="leader-header">
             <div>
               <div class="pill">Leaderboard</div>
+              <div style="font-size:0.95rem;font-weight:600;margin-top:6px;">Most Active Stall Explorers</div>
             </div>
+            <button class="btn-refresh" onclick="manualRefreshLeaderboard()">Refresh</button>
           </div>
           <div id="leader-list" role="list"></div>
         </div>
+
+        <div style="margin-top:10px;text-align:center;">
+          <div class="scroll-to-contest" onclick="scrollToLeaderboard()">Scroll down for leaderboard <span class="arrow">↓</span></div>
+        </div>
       </div>
+
     </div>
   </section>
 
@@ -281,323 +282,435 @@
   </div>
 
   <!-- Prayer modal -->
-  <div id="prayer-modal" aria-hidden="true" style="display:none;position:fixed;inset:0;align-items:center;justify-content:center;z-index:220;padding:18px;background:rgba(2,6,12,0.6)">
-    <div style="background:rgba(255,255,255,0.18);backdrop-filter:blur(12px);padding:18px;border-radius:12px;max-width:720px;color:#041022">
-      <h3 style="font-family:Times New Roman,serif;font-style:italic">Aunt Ida’s Prayer</h3>
-      <div style="font-family:Times New Roman,serif;font-style:italic">Father, whose life is within me, and whose love is ever about me…</div>
-      <div style="text-align:right;margin-top:12px"><button class="link-button" onclick="closePrayerModal()">Close</button></div>
+  <div id="prayer-modal" aria-hidden="true">
+    <div class="prayer-card">
+      <h3>Aunt Ida’s Prayer</h3>
+      <p>Father, whose life is within me,</p>
+      <p>and whose love is ever about me,</p>
+      <p>Grant that Thy life may be maintained in my life today and every day,</p>
+      <p>as with gladness of heart, without haste or confusion of thought,</p>
+      <p>I go about my daily tasks,</p>
+      <p>conscious of the ability to meet every rightful demand,</p>
+      <p>seeing the larger meaning of little things,</p>
+      <p>and finding beauty and love everywhere.</p>
+      <p>In the sense of Thy presence, may I walk through the hours,</p>
+      <p>breathing the atmosphere of love rather than anxious striving...</p>
+      <p style="margin-top:8px;">— Dr. Ida S. Scudder</p>
+      <div style="text-align:right;margin-top:8px"><button class="link-button" onclick="closePrayerModal()">Close</button></div>
     </div>
   </div>
 
+  <!-- Toast -->
   <div id="toast" role="status"></div>
 
-  <!-- Main app logic -->
   <script type="module">
+    /******************************************************************
+     * Final frontend (Render-only backend)
+     * BASE URL (confirmed): https://cmc-iria-secure.onrender.com
+     ******************************************************************/
+    const BASE = "https://cmc-iria-secure.onrender.com";
 
-    /* ---------- MOBILE SAFARI VIEWPORT FIX (place here at top of module) ---------- */
-    function setRealVH(){
-      document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px');
-    }
+    /* ---------- MOBILE VH FIX ---------- */
+    function setRealVH(){ document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px'); }
     setRealVH();
     window.addEventListener('resize', setRealVH);
     window.addEventListener('orientationchange', setRealVH);
 
-    // Firebase imports (keeps your existing flow)
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-    import {
-      getAuth,
-      setPersistence,
-      browserLocalPersistence,
-      createUserWithEmailAndPassword,
-      signInWithEmailAndPassword,
-      onAuthStateChanged,
-      signOut,
-      updateProfile
-    } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-
-    import {
-      getFirestore,
-      doc,
-      setDoc,
-      getDoc,
-      getDocs,
-      collection,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyCMQDWuUnVCbfr5Sozj9c2XMkISkc7WB00",
-      authDomain: "cmc-stallgrid-passport.firebaseapp.com",
-      projectId: "cmc-stallgrid-passport",
-      storageBucket: "cmc-stallgrid-passport.appspot.com",
-      messagingSenderId: "729984975490",
-      appId: "1:729984975490:web:757bca01efebe3149caa9b"
-    };
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    setPersistence(auth, browserLocalPersistence).catch(()=>{});
-    const db = getFirestore(app);
-
-    // ELEMENTS
+    /* ---------- ELEMENTS ---------- */
+    const panels = document.querySelectorAll('section.panel');
+    const heroTitle = document.getElementById('hero-title');
     const verseGlass = document.getElementById('verse-glass');
     const idaGlass = document.getElementById('ida-glass');
-    const heroBottom = document.getElementById('hero-bottom');
-    const prayerModal = document.getElementById('prayer-modal');
-    const toastEl = document.getElementById('toast');
+    const heroInner = document.getElementById('hero-inner');
+
+    const authCard = document.getElementById('auth-card');
+    const gridCard = document.getElementById('grid-card');
     const authStatus = document.getElementById('auth-status');
+    const userBanner = document.getElementById('user-banner');
+    const logoutBtn = document.getElementById('logout-btn');
+
+    const nameInput = document.getElementById('name-input');
+    const emailInput = document.getElementById('email-input');
+    const passwordInput = document.getElementById('password-input');
+    const delegateInput = document.getElementById('delegate-input');
+
     const gridEl = document.getElementById('grid');
     const leaderListEl = document.getElementById('leader-list');
-    const userBanner = document.getElementById('user-banner');
 
-    // reveal glass cards softly after small delay so chapel shows first
-    window.addEventListener('load', ()=>{
-      setTimeout(()=>{ verseGlass.classList.add('revealed'); }, 420);
-      setTimeout(()=>{ idaGlass.classList.add('revealed'); }, 760);
-      setTimeout(()=>{ document.querySelector('.hero-actions').style.opacity = 1; }, 940);
+    const qrOverlay = document.getElementById('qr-overlay');
+    const toastEl = document.getElementById('toast');
+    const prayerModal = document.getElementById('prayer-modal');
+
+    /* ---------- SIMPLE UI HELPERS ---------- */
+    function showToast(msg){ toastEl.textContent = msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),2200); }
+    function showError(msg){ alert(msg); }
+
+    /* ---------- ANIMATIONS: activate panels on scroll ---------- */
+    const panelObserver = new IntersectionObserver((entries)=>{
+      entries.forEach(entry => {
+        if(entry.isIntersecting) entry.target.classList.add('active');
+      });
+    }, {threshold:0.28});
+    panels.forEach(p => panelObserver.observe(p));
+
+    /* ---------- APPLE-LIKE HERO BEHAVIOUR ---------- */
+    // Boxes animate in one after another when hero visible; when user scrolls to contest, fade title and glass
+    const contestEl = document.getElementById('contest');
+    const contestObserver = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          // fade hero title away
+          heroTitle.classList.add('hidden');
+          // fade hero glass gently upward (already part of CSS)
+          verseGlass.classList.remove('enter');
+          idaGlass.classList.remove('enter');
+        }else{
+          heroTitle.classList.remove('hidden');
+          // animate glass entrance (one after another)
+          setTimeout(()=>verseGlass.classList.add('enter'), 200);
+          setTimeout(()=>idaGlass.classList.add('enter'), 420);
+        }
+      });
+    }, {threshold: 0.22});
+    if(contestEl) contestObserver.observe(contestEl);
+
+    // initial entry on load
+    window.addEventListener('load', ()=> {
+      // ensure hero title visible then animate glass in slightly delayed
+      setTimeout(()=>verseGlass.classList.add('enter'), 500);
+      setTimeout(()=>idaGlass.classList.add('enter'), 780);
     });
 
-    // Prayer modal
-    window.openPrayerModal = ()=>{ prayerModal.style.display='flex'; prayerModal.setAttribute('aria-hidden','false'); };
-    window.closePrayerModal = ()=>{ prayerModal.style.display='none'; prayerModal.setAttribute('aria-hidden','true'); };
+    /* ---------- AUTH (JWT stored in localStorage) ---------- */
+    let JWT = localStorage.getItem('cmc_jwt') || null;
+    let CURRENT_USER = JSON.parse(localStorage.getItem('cmc_user') || 'null'); // {name, email, delegateId}
 
-    // Toast
-    function showToast(msg){
-      toastEl.textContent = msg;
-      toastEl.classList.add('show');
-      toastEl.style.opacity = '1';
-      setTimeout(()=>{ toastEl.classList.remove('show'); toastEl.style.opacity='0' },2200);
+    function persistAuth(token, user){
+      JWT = token;
+      CURRENT_USER = user;
+      localStorage.setItem('cmc_jwt', token);
+      localStorage.setItem('cmc_user', JSON.stringify(user));
     }
-
-    // AUTH wiring
-    const nameInput = document.getElementById("name-input");
-    const emailInput = document.getElementById("email-input");
-    const passInput = document.getElementById("password-input");
-    const delegateInput = document.getElementById("delegate-input");
+    function clearAuth(){
+      JWT = null;
+      CURRENT_USER = null;
+      localStorage.removeItem('cmc_jwt');
+      localStorage.removeItem('cmc_user');
+    }
 
     async function registerUser(){
       const name = nameInput.value.trim();
       const email = emailInput.value.trim();
-      const pass = passInput.value.trim();
+      const pass = passwordInput.value.trim();
       const del = delegateInput.value.trim();
-      if(!name||!email||!pass){ alert("Name, email and password required"); return; }
+      if(!name || !email || !pass){ showError('Name, email and password required'); return; }
       try{
-        const cred = await createUserWithEmailAndPassword(auth,email,pass);
-        if(name) await updateProfile(cred.user,{displayName:name});
-        await setDoc(doc(db,"users",cred.user.uid),{ name, email, delegateId: del||null, createdAt: serverTimestamp() },{merge:true});
-        showToast("Registered & signed in");
-        document.getElementById("passport").scrollIntoView({behavior:"smooth"});
+        const r = await fetch(BASE + '/api/signup', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ name, email, password: pass, delegateId: del || undefined })
+        });
+        const j = await r.json();
+        if(!r.ok){ showError(j.error || 'Could not register'); return; }
+        persistAuth(j.token, { name: j.name, email: j.email, delegateId: j.delegateId });
+        showToast('Registered & signed in');
+        onSignedIn();
       }catch(e){
-        alert(e.message||String(e));
+        console.error(e); showError('Registration failed');
       }
     }
     window.registerUser = registerUser;
 
     async function loginUser(){
       const email = emailInput.value.trim();
-      const pass = passInput.value.trim();
-      if(!email||!pass){ alert("Enter email & password"); return; }
+      const pass = passwordInput.value.trim();
+      if(!email || !pass){ showError('Enter email & password'); return; }
       try{
-        await signInWithEmailAndPassword(auth,email,pass);
-        showToast("Logged in");
-        document.getElementById("passport").scrollIntoView({behavior:"smooth"});
+        const r = await fetch(BASE + '/api/login', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ email, password: pass })
+        });
+        const j = await r.json();
+        if(!r.ok){ showError(j.error || 'Login failed'); return; }
+        persistAuth(j.token, { name: j.name, email: j.email, delegateId: j.delegateId });
+        showToast('Logged in');
+        onSignedIn();
       }catch(e){
-        alert(e.message||String(e));
+        console.error(e); showError('Login failed');
       }
     }
     window.loginUser = loginUser;
 
-    window.logoutUser = async function(){
-      try{ await signOut(auth); showToast("Logged out"); }catch(e){ console.error(e); }
-    };
+    async function logoutUser(){
+      clearAuth();
+      authStatus.textContent = 'Not signed in';
+      authCard.classList.remove('hidden');
+      gridCard.classList.add('hidden');
+      userBanner.classList.add('hidden');
+      logoutBtn.classList.add('hidden');
+      clearVisitedStalls();
+      leaderListEl.innerHTML = '';
+      showToast('Logged out');
+    }
+    window.logoutUser = logoutUser;
 
-    onAuthStateChanged(auth, async (user)=>{
-      if(user){
-        const display = user.displayName || user.email || "Delegate";
-        authStatus.textContent = `Signed in as ${display}`;
-        userBanner.style.display = 'block';
-        try{
-          const ps = await getDoc(doc(db,"users",user.uid));
-          if(ps.exists()){
-            const data = ps.data();
-            const nm = data.name || display;
-            const del = data.delegateId;
-            userBanner.textContent = del ? `Welcome, ${nm} (Delegate ID: ${del})` : `Welcome, ${nm}`;
-          }else userBanner.textContent = `Welcome, ${display}`;
-        }catch(_){
-          userBanner.textContent = `Welcome, ${display}`;
-        }
-        await loadUserVisits(user.uid);
-        await loadLeaderboard();
-      } else {
-        authStatus.textContent = "Not signed in";
-        userBanner.style.display = 'none';
-        clearVisitedStalls();
-        leaderListEl.innerHTML = "";
-      }
-    });
-
-    // STALL GRID dynamic from Firestore 'stalls' collection
-    let stallDocs = [];
-    async function buildGridFromFirestore(){
-      gridEl.innerHTML = "";
+    async function validateExistingSession(){
+      if(!JWT || !CURRENT_USER) return;
+      // attempt to fetch visits for the delegate to verify token
       try{
-        const snap = await getDocs(collection(db,"stalls"));
-        if(snap.empty){
-          for(let i=1;i<=12;i++){ createStallCard({ id:`Stall ${i}`, name:`Stall ${i}` }); }
+        const r = await fetch(BASE + `/api/visits/${CURRENT_USER.delegateId}`, { headers:{ 'Authorization': `Bearer ${JWT}` }});
+        if(r.status === 401){
+          clearAuth();
           return;
         }
-        stallDocs = [];
-        snap.forEach(docSnap=>{
-          const docId = docSnap.id;
-          const data = docSnap.data() || {};
-          const name = data.name || docId;
-          stallDocs.push({ id: docId, name });
-        });
-        stallDocs.sort((a,b)=> a.name.localeCompare(b.name,undefined,{numeric:true}));
-        stallDocs.forEach(s=>createStallCard(s));
+        if(!r.ok) {
+          // still treat as signed in but try to rebuild
+        }
+        onSignedIn();
       }catch(e){
-        console.error("Error loading stalls",e);
-        for(let i=1;i<=12;i++) createStallCard({id:`Stall ${i}`,name:`Stall ${i}`});
+        console.warn('session check failed',e);
+        clearAuth();
       }
     }
 
+    function onSignedIn(){
+      if(!CURRENT_USER || !JWT) return;
+      authStatus.textContent = `Signed in as ${CURRENT_USER.name || CURRENT_USER.email}`;
+      authCard.classList.add('hidden');
+      gridCard.classList.remove('hidden');
+      userBanner.textContent = CURRENT_USER.delegateId ? `Welcome, ${CURRENT_USER.name} (Delegate ID: ${CURRENT_USER.delegateId})` : `Welcome, ${CURRENT_USER.name}`;
+      userBanner.classList.remove('hidden');
+      logoutBtn.classList.remove('hidden');
+      // build grid, load visits, leaderboard
+      buildGridFromServer();
+      loadUserVisits(CURRENT_USER.delegateId).catch(()=>{});
+      loadLeaderboard().catch(()=>{});
+    }
+
+    /* ---------- GRID: try fetching stalls from backend first, fallback to default ---------- */
+    async function buildGridFromServer(){
+      gridEl.innerHTML = '';
+      try{
+        const r = await fetch(BASE + '/api/stalls'); // optional endpoint; many backends won't have it
+        if(r.ok){
+          const arr = await r.json();
+          if(Array.isArray(arr) && arr.length){
+            arr.forEach(s => createStallCard({ name: s.name || s.id }));
+            return;
+          }
+        }
+      }catch(e){ /* ignore */ }
+
+      // fallback: default number (dynamic later)
+      const TOTAL = 15;
+      for(let i=1;i<=TOTAL;i++) createStallCard({ name: `Stall ${i}` });
+    }
+
     function createStallCard(stall){
-      const div = document.createElement("div");
-      div.className = "neon-stall";
+      const div = document.createElement('div');
+      div.className = 'neon-stall';
       div.dataset.stallId = stall.name;
-      div.innerHTML = `<div style="font-size:0.95rem">${stall.name}</div><div style="font-size:0.78rem;opacity:0.9">Tap to scan</div>`;
-      div.addEventListener("click", ()=>openScanner(stall.name));
+      div.innerHTML = `<div style="font-size:0.96rem">${stall.name}</div><div style="font-size:0.76rem;opacity:0.9">Tap to scan</div>`;
+      div.addEventListener('click', ()=> openScanner(stall.name));
+      // neon pop on hover is preserved by CSS .neon-stall:hover
       gridEl.appendChild(div);
     }
 
     function clearVisitedStalls(){
-      document.querySelectorAll(".neon-stall").forEach(c=>{
-        c.classList.remove("visited");
-        c.innerHTML = `<div style="font-size:0.95rem">${c.dataset.stallId}</div><div style="font-size:0.78rem;opacity:0.9">Tap to scan</div>`;
+      document.querySelectorAll('.neon-stall').forEach(c => {
+        c.classList.remove('visited');
+        c.innerHTML = `<div style="font-size:0.96rem">${c.dataset.stallId}</div><div style="font-size:0.76rem;opacity:0.9">Tap to scan</div>`;
       });
     }
 
     function markStallVisited(stallName){
-      document.querySelectorAll(".neon-stall").forEach(card=>{
+      document.querySelectorAll('.neon-stall').forEach(card=>{
         if(card.dataset.stallId === stallName){
-          card.classList.add("visited");
-          card.innerHTML = `<div style="font-size:0.95rem">${stallName} ✓</div><div style="font-size:0.78rem;opacity:0.9">Visited</div>`;
+          card.classList.add('visited');
+          card.innerHTML = `<div style="font-size:0.96rem">${stallName} ✓</div><div style="font-size:0.76rem;opacity:0.9">Visited</div>`;
         }
       });
     }
 
-    async function loadUserVisits(uid){
+    /* ---------- LOAD USER VISITS ---------- */
+    async function loadUserVisits(delegateId){
+      if(!delegateId || !JWT) return;
       try{
-        const snap = await getDocs(collection(db,"visits",uid,"stalls"));
-        snap.forEach(docSnap=>{
-          markStallVisited(docSnap.id);
-        });
+        const r = await fetch(BASE + `/api/visits/${delegateId}`, { headers:{ 'Authorization': `Bearer ${JWT}` }});
+        if(r.status === 401){ clearAuth(); showError('Session expired, please login again.'); return; }
+        const j = await r.json();
+        if(j && Array.isArray(j.visits)){
+          clearVisitedStalls();
+          j.visits.forEach(s => markStallVisited(String(s)));
+        }
       }catch(e){
-        console.error("Error loading visits",e);
+        console.error('loadUserVisits', e);
       }
     }
 
-    // QR scanner using html5-qrcode
+    /* ---------- QR SCANNER (html5-qrcode) ---------- */
     let html5QrInstance = null;
-    let currentStallName = null;
-    const qrOverlay = document.getElementById("qr-overlay");
+    let currentStall = null;
 
     async function openScanner(stallName){
-      if(!auth.currentUser){ alert("Please login first to record visits."); return; }
-      currentStallName = stallName;
-      qrOverlay.style.display = "flex";
-      const regionId = "qr-reader";
+      if(!JWT || !CURRENT_USER){ alert('Please login first to record visits.'); return; }
+      currentStall = stallName;
+      qrOverlay.style.display = 'flex';
+      const regionId = 'qr-reader';
       if(!html5QrInstance) html5QrInstance = new Html5Qrcode(regionId);
 
+      // stop if running
+      try{ await html5QrInstance.stop(); }catch(_){}
       try{
         await html5QrInstance.start(
-          { facingMode: "environment" },
+          { facingMode: { exact: "environment" } }, // try back camera first
           { fps: 10, qrbox: 250 },
           async (decodedText) => {
+            // decodedText is expected to be string payload produced by gen_qrs.js
             try{ await html5QrInstance.stop(); }catch(_){}
-            qrOverlay.style.display = "none";
-            await recordVisit(currentStallName, decodedText);
+            qrOverlay.style.display = 'none';
+            // parse payload: either querystring style or plain stall token piece
+            const parsed = parseQrPayload(decodedText);
+            if(!parsed){ showError('Unrecognised QR format'); return; }
+            // server expects body: { stall, token, exp } (it uses JWT to know who is scanning)
+            await verifyWithServer(parsed.stall, parsed.token, parsed.exp);
           },
-          (err)=>{ /* ignore decode failures */ }
+          (errorMessage) => {
+            // ignore decode failures
+          }
         );
       }catch(err){
-        qrOverlay.style.display = "none";
-        alert("Camera error: " + (err.message||err));
+        qrOverlay.style.display = 'none';
+        showError('Camera error: ' + (err.message||err));
       }
     }
     window.openScanner = openScanner;
 
-    async function closeScanner(){
-      qrOverlay.style.display = "none";
+    function closeScanner(){
+      qrOverlay.style.display = 'none';
       if(html5QrInstance){
-        try{ await html5QrInstance.stop(); }catch(_){}
+        html5QrInstance.stop().catch(()=>{});
       }
     }
     window.closeScanner = closeScanner;
 
-    // record visit to Firestore
-    async function recordVisit(stallName, qrText){
-      const user = auth.currentUser;
-      if(!user) return;
-      const uid = user.uid;
+    function parseQrPayload(txt){
+      // expected formats:
+      // 1) querystring: "stall=5&delegate=D123&exp=170...&token=abc"
+      // 2) direct "stall=5&exp=..&token=.."
+      if(!txt) return null;
+      // try to split key=val pairs
       try{
-        await setDoc(doc(db,"visits",uid),{ updatedAt: serverTimestamp() },{merge:true});
-        await setDoc(doc(db,"visits",uid,"stalls",stallName),{ stall: stallName, scannedText: qrText||null, visitedAt: serverTimestamp() },{merge:true});
-        markStallVisited(stallName);
-        showToast(`Recorded visit: ${stallName}`);
-        await loadLeaderboard();
+        // sometimes QR libraries include line breaks; trim
+        const t = txt.trim();
+        // If payload looks like a URL, extract query
+        let qs = t;
+        if(t.includes('?') && (t.includes('http') || t.includes('https'))) qs = t.split('?').slice(1).join('?');
+        const params = {};
+        qs.split('&').forEach(pair=>{
+          const [k,v] = pair.split('=');
+          if(k) params[k] = decodeURIComponent((v||'').replace(/\+/g,' '));
+        });
+        if(params.stall && params.token && params.exp){
+          return { stall: params.stall, token: params.token, exp: params.exp, delegate: params.delegate||null };
+        }
+        // fallback: if decoded text is just a number / stall name, return that (not secure)
+        if(/^stall\s*\d+$/i.test(t) || /^\d+$/.test(t)) {
+          // insecure fallback — should not be used with secure token requirement
+          const stall = t.match(/\d+/)[0];
+          return { stall, token: null, exp: null };
+        }
+        return null;
+      }catch(e){ console.warn('parseQrPayload',e); return null; }
+    }
+
+    /* ---------- VERIFY WITH SERVER (secure HMAC check) ---------- */
+    async function verifyWithServer(stall, token, exp){
+      if(!JWT || !CURRENT_USER) { showError('Not signed in'); return; }
+      if(!token || !exp){
+        showError('QR token missing or invalid');
+        return;
+      }
+      try{
+        const r = await fetch(BASE + '/api/verify', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${JWT}` },
+          body: JSON.stringify({ stall, token, exp })
+        });
+        const j = await r.json();
+        if(r.ok && j && j.ok){
+          markStallVisited(stall);
+          showToast(`Recorded visit: ${stall}`);
+          await loadLeaderboard();
+        } else {
+          showError(j.error || 'Invalid or expired token');
+        }
       }catch(e){
-        console.error("Error recording visit",e);
-        alert("Could not record visit. Try again.");
+        console.error('verifyWithServer', e);
+        showError('Could not verify QR. Try again.');
       }
     }
 
-    // Firestore-native leaderboard (counts visits per user)
+    /* ---------- LEADERBOARD ---------- */
     async function loadLeaderboard(){
       leaderListEl.innerHTML = '<div style="padding:8px 0;color:rgba(240,248,255,0.9)">Loading…</div>';
       try{
-        const visitsSnap = await getDocs(collection(db,"visits"));
-        const rows = [];
-        for(const docSnap of visitsSnap.docs){
-          const uid = docSnap.id;
-          const stallsSnap = await getDocs(collection(db,"visits",uid,"stalls"));
-          const count = stallsSnap.size;
-          if(count===0) continue;
-          let displayName = uid.substring(0,6);
-          try{
-            const userDoc = await getDoc(doc(db,"users",uid));
-            if(userDoc.exists()){
-              const d = userDoc.data();
-              displayName = d.name || d.delegateId || d.email || displayName;
-            }
-          }catch(_){}
-          rows.push({ uid, displayName, count });
-        }
-        rows.sort((a,b)=>b.count - a.count);
-        if(rows.length===0){ leaderListEl.innerHTML = '<div style="padding:8px 0;color:rgba(240,248,255,0.7)">No visits recorded yet.</div>'; return; }
+        const r = await fetch(BASE + '/api/leaderboard');
+        if(!r.ok){ leaderListEl.innerHTML = '<div style="padding:8px 0;color:#ffdddd">Error loading leaderboard.</div>'; return; }
+        const j = await r.json();
+        // server returns { top: [...] } earlier — handle both shapes
+        const rows = Array.isArray(j) ? j : (j.top || []);
+        if(!rows.length){ leaderListEl.innerHTML = '<div style="padding:8px 0;color:rgba(240,248,255,0.7)">No visits recorded yet.</div>'; return; }
         leaderListEl.innerHTML = '';
         rows.forEach((r,i)=>{
           const row = document.createElement('div');
           row.className = 'row';
-          row.innerHTML = `<div style="font-weight:700">${i+1}. ${r.displayName}</div><div style="opacity:0.9">${r.count} stall${r.count===1?"":"s"}</div>`;
+          row.style.display = 'flex';
+          row.style.justifyContent = 'space-between';
+          row.style.padding = '8px 6px';
+          row.innerHTML = `<div style="font-weight:700">${i+1}. ${r.name || r.delegateId || r.user || 'Delegate'}</div><div style="opacity:0.92">${r.count||r.cnt||0} stall${(r.count||r.cnt||0)===1?"":"s"}</div>`;
           leaderListEl.appendChild(row);
         });
       }catch(e){
-        console.error("Leaderboard error",e);
+        console.error('loadLeaderboard',e);
         leaderListEl.innerHTML = '<div style="padding:8px 0;color:#ffdddd">Error loading leaderboard.</div>';
       }
     }
+    window.manualRefreshLeaderboard = function(){ loadLeaderboard().then(()=>showToast('Leaderboard refreshed')); };
 
-    window.manualRefreshLeaderboard = function(){
-      loadLeaderboard().then(()=>showToast("Leaderboard refreshed"));
-    };
+    /* ---------- INITIAL BUILD & Session check ---------- */
+    (async function init(){
+      try{
+        await buildGridFromServer();
+        // if token exists, validate and show UI
+        await validateExistingSession();
+        // load leaderboard (public)
+        await loadLeaderboard();
+      }catch(e){ console.warn(e); }
+    })();
 
-    // initial build
-    await buildGridFromFirestore();
+    /* ---------- PRAYER MODAL ---------- */
+    window.openPrayerModal = function(){ prayerModal.style.display = 'flex'; prayerModal.setAttribute('aria-hidden','false'); };
+    window.closePrayerModal = function(){ prayerModal.style.display = 'none'; prayerModal.setAttribute('aria-hidden','true'); };
 
-    // call loadLeaderboard occasionally as extra safety (but only when visible)
-    let leaderTimer = setInterval(()=>{ if(document.visibilityState==='visible') loadLeaderboard(); }, 15000);
+    /* ---------- SCROLL HELPERS ---------- */
+    window.scrollToContest = ()=>document.getElementById('contest').scrollIntoView({behavior:'smooth'});
+    window.scrollToLeaderboard = ()=>document.getElementById('leaderboard').scrollIntoView({behavior:'smooth', block:'start'});
+
+    /* ---------- Clean-up in case of stale tokens on 401 responses (global fetch wrapper optional) ---------- */
+    // small helper: wrap fetch to handle 401 -> auto-logout
+    async function safeFetch(url, opts){
+      const res = await fetch(url, opts);
+      if(res.status === 401){
+        clearAuth();
+        showError('Session expired. Please login again.');
+      }
+      return res;
+    }
+
+    // expose a convenience for debugging
+    window._debug = { BASE, getToken: ()=>JWT, getUser: ()=>CURRENT_USER };
 
   </script>
+
 </body>
 </html>
